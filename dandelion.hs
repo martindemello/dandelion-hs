@@ -31,9 +31,10 @@ viewBox (Pair v) = v
 
 -- new textfield
 makeEntry :: String -> IO Entry
-makeEntry str = do e <- entryNew
-                   entrySetText e str
-                   return e
+makeEntry str = do
+  e <- entryNew
+  entrySetText e str
+  return e
 
 -- add widget to box with default params
 addToBox box widget = boxPackStart box widget PackNatural 0
