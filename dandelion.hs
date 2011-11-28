@@ -109,9 +109,16 @@ newBoxButton box s = do
   addToBox box button
   return button
 
-main :: IO ()
-main = do
+runGUI :: IO Window -> IO ()
+runGUI gui = do
   initGUI
+  window <- gui
+  onDestroy window mainQuit
+  widgetShowAll window
+  mainGUI
+
+main :: IO ()
+main = runGUI $ do
   window <- windowNew
   box <- vBoxNew False 0
   bbox <- hBoxNew False 0
@@ -143,6 +150,4 @@ main = do
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
   onClicked saveButton (saveFile ed "file.out")
 
-  onDestroy window mainQuit
-  widgetShowAll window
-  mainGUI
+  return window
