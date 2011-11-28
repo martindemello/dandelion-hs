@@ -26,11 +26,23 @@ data EditorView = EditorView { displayBox :: VBox
 makePair :: String -> IO PairBox
 makePair s = do
   box <- vBoxNew False 0
-  label <- labelNew (Just s)
+  label <- makeLabel s
   entry <- makeEntry ""
   addToBox box label
   addToBox box entry
   return $ PairBox { pbOrig = label, pbText = entry, pbVbox = box }
+
+origText :: PairBox -> IO String
+origText pb = (labelGetText . pbOrig) pb
+
+newText :: PairBox -> IO String
+newText pb = (entryGetText . pbText) pb
+
+stringOfPair :: PairBox -> IO String
+stringOfPair pb = do
+  a <- origText pb
+  b <- newText pb
+  return ("# " ++ a ++ "\n> " ++ b)
 
 -- new textfield
 makeEntry :: String -> IO Entry
@@ -38,6 +50,13 @@ makeEntry str = do
   e <- entryNew
   entrySetText e str
   return e
+
+-- new label
+makeLabel :: String -> IO Label
+makeLabel s = do
+  label <- labelNew (Just s)
+  miscSetAlignment label 0 0
+  return label
 
 -- add widget to box with default params
 addToBox box widget = boxPackStart box widget PackNatural 0
@@ -66,7 +85,7 @@ addNewLine ed s = do
 
 addLines :: Editor -> Int -> IO Editor
 addLines ed i = do
-  sequence_ (map (\x -> addNewLine ed "") [1..i])
+  sequence_ (map (\x -> addNewLine ed (" hello " ++ (show x))) [1..i])
   return ed
 
 getLine :: Editor -> Int -> IO PairBox
@@ -82,7 +101,7 @@ getPairs ed = do
 getLines :: Editor -> IO [String]
 getLines ed = do
   es <- getPairs ed
-  ls <- V.mapM (entryGetText . pbText) es
+  ls <- V.mapM stringOfPair es
   return $ V.toList ls
 
 -- main functions
