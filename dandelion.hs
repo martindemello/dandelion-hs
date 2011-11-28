@@ -4,6 +4,8 @@ import qualified Graphics.UI.Gtk as G hiding (Point)
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Graphics.UI.Gtk.Abstract.Widget as W
 import qualified Graphics.Rendering.Cairo as C
+import qualified Data.Vector as V
+import Data.Vector (Vector, (!))
 import Control.Monad.Trans (liftIO)
 
 -- a PairBox contains a VBox containing a Label and an Entry
@@ -12,10 +14,10 @@ data PairBox = PairBox { pbOrig :: Label
                        , pbVbox :: VBox
                        }
 
-type Editor = IORef [PairBox]
+type Editor = IORef (Vector PairBox)
 
 newEditor :: IO Editor
-newEditor = newIORef []
+newEditor = newIORef (V.empty)
 
 data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
@@ -46,14 +48,14 @@ addPairToBox box v = addToBox box (pbVbox v)
 addToEditor :: Editor -> PairBox -> IO Editor
 addToEditor ed w = do
   es <- readIORef ed
-  writeIORef ed (w : es)
+  writeIORef ed (es `V.snoc` w)
   return ed
 
 removeFromEditor :: Editor -> IO PairBox
 removeFromEditor ed = do
   es <- readIORef ed
-  e <- return $ head es
-  writeIORef ed (tail es)
+  e <- return $ V.last es
+  writeIORef ed (V.init es)
   return e
 
 addNewLine :: Editor -> String -> IO PairBox
@@ -70,9 +72,9 @@ addLines ed i = do
 getLine :: Editor -> Int -> IO PairBox
 getLine ed i = do
   es <- readIORef ed
-  return (es !! i)
+  return (es ! i)
 
-getPairs :: Editor -> IO [PairBox]
+getPairs :: Editor -> IO (Vector PairBox)
 getPairs ed = do
   es <- readIORef ed
   return es
@@ -80,8 +82,8 @@ getPairs ed = do
 getLines :: Editor -> IO [String]
 getLines ed = do
   es <- getPairs ed
-  ls <- mapM (entryGetText . pbText) es
-  return ls
+  ls <- V.mapM (entryGetText . pbText) es
+  return $ V.toList ls
 
 -- main functions
 addLine :: Editor -> EditorView -> String -> IO ()
@@ -134,7 +136,7 @@ main = do
   addLines ed 13
 
   eds <- getPairs ed
-  mapM (addPairToBox ebox) eds
+  V.mapM (addPairToBox ebox) eds
 
   view <- readIORef ev
   onClicked minusButton (removeLine ed view)
