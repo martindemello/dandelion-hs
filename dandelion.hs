@@ -126,10 +126,6 @@ main = runGUI $ do
 
   ev <- newIORef EditorView { displayBox = ebox, currentLine = 0 }
 
-  G.on window G.keyPressEvent $ E.tryEvent $ do
-    "Escape" <- E.eventKeyName
-    C.liftIO $ G.widgetDestroy window
-
   set window [ containerChild := box ]
 
   addToBox box ebox
@@ -138,6 +134,7 @@ main = runGUI $ do
   plusButton <- newBoxButton bbox "Add"
   minusButton <- newBoxButton bbox "Remove"
   saveButton <- newBoxButton bbox "Save"
+  exitButton <- newBoxButton bbox "Exit"
 
   ed <- newEditor
   addLines ed 13
@@ -149,5 +146,6 @@ main = runGUI $ do
   onClicked minusButton (removeLine ed view)
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
   onClicked saveButton (saveFile ed "file.out")
+  onClicked exitButton (G.widgetDestroy window)
 
   return window
