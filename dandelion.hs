@@ -93,10 +93,9 @@ getLine ed i = do
   es <- readIORef ed
   return (es ! i)
 
+-- just in case we change the internal representation of Editor
 getPairs :: Editor -> IO (Vector PairBox)
-getPairs ed = do
-  es <- readIORef ed
-  return es
+getPairs ed = readIORef ed
 
 getLines :: Editor -> IO [String]
 getLines ed = do
