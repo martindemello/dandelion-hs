@@ -6,13 +6,16 @@ import qualified Graphics.UI.Gtk.Abstract.Widget as W
 import qualified Graphics.Rendering.Cairo as C
 import Control.Monad.Trans (liftIO)
 
+-- a PairBox contains a VBox containing a Label and an Entry
+data PairBox = PairBox { pbOrig :: Label
+                       , pbText :: Entry
+                       , pbVbox :: VBox
+                       }
+
 type Editor = IORef [PairBox]
 
 newEditor :: IO Editor
 newEditor = newIORef []
-
-
-data PairBox = Pair VBox
 
 data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
@@ -25,9 +28,7 @@ makePair s = do
   entry <- makeEntry ""
   addToBox box label
   addToBox box entry
-  return $ Pair box
-
-viewBox (Pair v) = v
+  return $ PairBox { pbOrig = label, pbText = entry, pbVbox = box }
 
 -- new textfield
 makeEntry :: String -> IO Entry
@@ -39,7 +40,7 @@ makeEntry str = do
 -- add widget to box with default params
 addToBox box widget = boxPackStart box widget PackNatural 0
 
-addPairToBox box v = addToBox box (viewBox v)
+addPairToBox box v = addToBox box (pbVbox v)
 
 -- editor functions
 addToEditor :: Editor -> PairBox -> IO Editor
@@ -71,10 +72,16 @@ getLine ed i = do
   es <- readIORef ed
   return (es !! i)
 
-getEntries :: Editor -> IO [PairBox]
-getEntries ed = do
+getPairs :: Editor -> IO [PairBox]
+getPairs ed = do
   es <- readIORef ed
   return es
+
+getLines :: Editor -> IO [String]
+getLines ed = do
+  es <- getPairs ed
+  ls <- mapM (entryGetText . pbText) es
+  return ls
 
 -- main functions
 addLine :: Editor -> EditorView -> String -> IO ()
@@ -84,9 +91,21 @@ addLine ed view s = do
 
 removeLine :: Editor -> EditorView -> IO ()
 removeLine ed view = do
-  es <- getEntries ed
+  es <- getPairs ed
   e <- removeFromEditor ed
-  containerRemove (displayBox view) (viewBox e)
+  containerRemove (displayBox view) (pbVbox e)
+
+saveFile :: Editor -> String -> IO ()
+saveFile ed path = do
+  lines <- getLines ed
+  writeFile path (unlines lines)
+
+newBoxButton :: (BoxClass a) => a -> String -> IO Button
+newBoxButton box s = do
+  button <- buttonNew
+  set button [ buttonLabel := s ]
+  addToBox box button
+  return button
 
 main :: IO ()
 main = do
@@ -107,23 +126,20 @@ main = do
   addToBox box ebox
   addToBox box bbox
 
-  plusButton <- buttonNew
-  set plusButton [ buttonLabel := "Add" ]
-  addToBox bbox plusButton
-
-  minusButton <- buttonNew
-  set minusButton [ buttonLabel := "Remove" ]
-  addToBox bbox minusButton
+  plusButton <- newBoxButton bbox "Add"
+  minusButton <- newBoxButton bbox "Remove"
+  saveButton <- newBoxButton bbox "Save"
 
   ed <- newEditor
   addLines ed 13
 
-  eds <- getEntries ed
+  eds <- getPairs ed
   mapM (addPairToBox ebox) eds
 
   view <- readIORef ev
   onClicked minusButton (removeLine ed view)
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
+  onClicked saveButton (saveFile ed "file.out")
 
   onDestroy window mainQuit
   widgetShowAll window
