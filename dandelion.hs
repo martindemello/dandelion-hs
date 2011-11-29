@@ -4,12 +4,12 @@ import qualified Graphics.UI.Gtk as G hiding (Point)
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Graphics.UI.Gtk.Abstract.Widget as W
 import qualified Graphics.Rendering.Cairo as C
-import qualified Data.List as L
 import qualified Data.Vector as V
 import qualified Text.JSON as JSON
 import Data.Vector (Vector, (!))
 import Control.Monad.Trans (liftIO)
-import Data.String.Utils
+
+import Datafile
 
 -- a PairBox contains a VBox containing a Label and an Entry
 data PairBox = PairBox { pbOrig :: Label
@@ -20,7 +20,6 @@ data PairBox = PairBox { pbOrig :: Label
 type Editor = IORef (Vector PairBox)
 
 
-
 newEditor :: IO Editor
 newEditor = newIORef (V.empty)
 
@@ -28,8 +27,8 @@ data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
                              }
 
-makePair :: (String, String) -> IO PairBox
-makePair (l, s) = do
+makePairBox :: (String, String) -> IO PairBox
+makePairBox (l, s) = do
   box <- vBoxNew False 0
   label <- makeLabel l
   entry <- makeEntry s
@@ -43,11 +42,11 @@ origText pb = (labelGetText . pbOrig) pb
 newText :: PairBox -> IO String
 newText pb = (entryGetText . pbText) pb
 
-stringOfPair :: PairBox -> IO String
-stringOfPair pb = do
+pairOfPairBox :: PairBox -> IO (String, String)
+pairOfPairBox pb = do
   a <- origText pb
   b <- newText pb
-  return ("# " ++ a ++ "\n> " ++ b)
+  return $ (a, b)
 
 -- new textfield
 makeEntry :: String -> IO Entry
@@ -84,7 +83,7 @@ removeFromEditor ed = do
 
 addNewLine :: Editor -> String -> IO PairBox
 addNewLine ed s = do
-  l <- makePair (s, "")
+  l <- makePairBox (s, "")
   addToEditor ed l
   return l
 
@@ -102,28 +101,28 @@ getLine ed i = do
 getPairs :: Editor -> IO (Vector PairBox)
 getPairs ed = readIORef ed
 
-getLines :: Editor -> IO [String]
+getLines :: Editor -> IO [(String, String)]
 getLines ed = do
   es <- getPairs ed
-  ls <- V.mapM stringOfPair es
+  ls <- V.mapM pairOfPairBox es
   return $ V.toList ls
 
 -- file <-> editor
 
-processFile :: (String -> [a]) -> (a -> IO PairBox) -> Editor -> String -> IO ()
-processFile f g ed path = do
+processFile :: (String -> [(String, String)]) -> Editor -> String -> IO ()
+processFile f ed path = do
   s <- readFile path
-  ps <- mapM g (f s)
+  ps <- mapM makePairBox (f s)
   es <- return $ V.fromList ps
   writeIORef ed es
 
-importFile = processFile lines (\x -> makePair (x, ""))
-loadFile   = processFile parseFile makePair
+importFile = processFile parseImport
+loadFile   = processFile parseFile
 
 saveFile :: Editor -> String -> IO ()
 saveFile ed path = do
-  lines <- getLines ed
-  writeFile path (unlines lines)
+  ls <- getLines ed
+  writeFile path (showFile ls)
 
 -- main functions
 addLine :: Editor -> EditorView -> String -> IO ()
@@ -136,22 +135,6 @@ removeLine ed view = do
   es <- getPairs ed
   e <- removeFromEditor ed
   containerRemove (displayBox view) (pbVbox e)
-
-joinLines :: [String] -> String
-joinLines [] = ""
-joinLines [x] = strip $ tail x
-joinLines (x : xs) = (strip $ tail x) ++ "\n" ++ (joinLines xs)
-
-collectLines :: [String] -> [String]
-collectLines ls = map joinLines $ L.groupBy (\x y -> head x == head y) ls 
-
-parseLines :: [String] -> [(String, String)] -> [(String, String)]
-parseLines [] a = a
-parseLines [x] a = (x, "") : a
-parseLines (x : y : xs) a = parseLines xs ((x, y) : a)
-
-parseFile :: String -> [(String, String)]
-parseFile s = reverse $ parseLines (collectLines $ lines s) []
 
 refreshView :: Editor -> EditorView -> IO ()
 refreshView ed view = do
