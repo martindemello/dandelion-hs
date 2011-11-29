@@ -4,9 +4,12 @@ import qualified Graphics.UI.Gtk as G hiding (Point)
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Graphics.UI.Gtk.Abstract.Widget as W
 import qualified Graphics.Rendering.Cairo as C
+import qualified Data.List as L
 import qualified Data.Vector as V
+import qualified Text.JSON as JSON
 import Data.Vector (Vector, (!))
 import Control.Monad.Trans (liftIO)
+import Data.String.Utils
 
 -- a PairBox contains a VBox containing a Label and an Entry
 data PairBox = PairBox { pbOrig :: Label
@@ -23,11 +26,11 @@ data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
                              }
 
-makePair :: String -> IO PairBox
-makePair s = do
+makePair :: String -> String -> IO PairBox
+makePair l s = do
   box <- vBoxNew False 0
-  label <- makeLabel s
-  entry <- makeEntry ""
+  label <- makeLabel l
+  entry <- makeEntry s
   addToBox box label
   addToBox box entry
   return $ PairBox { pbOrig = label, pbText = entry, pbVbox = box }
@@ -79,7 +82,7 @@ removeFromEditor ed = do
 
 addNewLine :: Editor -> String -> IO PairBox
 addNewLine ed s = do
-  l <- makePair s
+  l <- makePair s ""
   addToEditor ed l
   return l
 
@@ -108,7 +111,7 @@ getLines ed = do
 importFile :: Editor -> String -> IO ()
 importFile ed path = do
   s <- readFile path
-  ps <- mapM makePair (lines s)
+  ps <- mapM (\x -> makePair x "") (lines s)
   es <- return $ V.fromList ps
   writeIORef ed es
 
@@ -123,6 +126,30 @@ removeLine ed view = do
   es <- getPairs ed
   e <- removeFromEditor ed
   containerRemove (displayBox view) (pbVbox e)
+
+joinLines :: [String] -> String
+joinLines [] = ""
+joinLines [x] = strip $ tail x
+joinLines (x : xs) = (strip $ tail x) ++ "\n" ++ (joinLines xs)
+
+collectLines :: [String] -> [String]
+collectLines ls = map joinLines $ L.groupBy (\x y -> head x == head y) ls 
+
+parseLines :: [String] -> [(String, String)] -> [(String, String)]
+parseLines [] a = a
+parseLines [x] a = (x, "") : a
+parseLines (x : y : xs) a = parseLines xs ((x, y) : a)
+
+parseFile :: String -> [(String, String)]
+parseFile s = reverse $ parseLines (collectLines $ lines s) []
+
+loadFile :: Editor -> String -> IO ()
+loadFile ed path = do
+  s <- readFile path
+  ls <- return $ parseFile s
+  ps <- mapM (\(x,y) -> makePair x y) ls
+  es <- return $ V.fromList ps
+  writeIORef ed es
 
 saveFile :: Editor -> String -> IO ()
 saveFile ed path = do
@@ -140,6 +167,12 @@ runImport :: Editor -> IORef EditorView -> String -> IO ()
 runImport ed ev path = do
   view <- readIORef ev
   importFile ed "file.orig"
+  refreshView ed view
+
+runLoad :: Editor -> IORef EditorView -> String -> IO ()
+runLoad ed ev path = do
+  view <- readIORef ev
+  loadFile ed "file.in"
   refreshView ed view
 
 newBoxButton :: (BoxClass a) => a -> String -> IO Button
@@ -173,9 +206,10 @@ main = runGUI $ do
 
   plusButton <- newBoxButton bbox "Add"
   minusButton <- newBoxButton bbox "Remove"
+  loadButton <- newBoxButton bbox "Load"
   saveButton <- newBoxButton bbox "Save"
-  exitButton <- newBoxButton bbox "Exit"
   importButton <- newBoxButton bbox "Import"
+  exitButton <- newBoxButton bbox "Exit"
 
   ed <- newEditor
   addLines ed 13
@@ -186,6 +220,7 @@ main = runGUI $ do
   view <- readIORef ev
   onClicked minusButton (removeLine ed view)
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
+  onClicked loadButton (runLoad ed ev "file.in" >> widgetShowAll window)
   onClicked saveButton (saveFile ed "file.out")
   onClicked exitButton (G.widgetDestroy window)
   onClicked importButton (runImport ed ev "file.orig" >> widgetShowAll window)
