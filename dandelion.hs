@@ -26,8 +26,8 @@ data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
                              }
 
-makePair :: String -> String -> IO PairBox
-makePair l s = do
+makePair :: (String, String) -> IO PairBox
+makePair (l, s) = do
   box <- vBoxNew False 0
   label <- makeLabel l
   entry <- makeEntry s
@@ -82,7 +82,7 @@ removeFromEditor ed = do
 
 addNewLine :: Editor -> String -> IO PairBox
 addNewLine ed s = do
-  l <- makePair s ""
+  l <- makePair (s, "")
   addToEditor ed l
   return l
 
@@ -106,14 +106,26 @@ getLines ed = do
   ls <- V.mapM stringOfPair es
   return $ V.toList ls
 
--- file -> editor
+-- file <-> editor
 
 importFile :: Editor -> String -> IO ()
 importFile ed path = do
   s <- readFile path
-  ps <- mapM (\x -> makePair x "") (lines s)
+  ps <- mapM (\x -> makePair (x, "")) (lines s)
   es <- return $ V.fromList ps
   writeIORef ed es
+
+loadFile :: Editor -> String -> IO ()
+loadFile ed path = do
+  s <- readFile path
+  ps <- mapM makePair (parseFile s)
+  es <- return $ V.fromList ps
+  writeIORef ed es
+
+saveFile :: Editor -> String -> IO ()
+saveFile ed path = do
+  lines <- getLines ed
+  writeFile path (unlines lines)
 
 -- main functions
 addLine :: Editor -> EditorView -> String -> IO ()
@@ -143,19 +155,6 @@ parseLines (x : y : xs) a = parseLines xs ((x, y) : a)
 parseFile :: String -> [(String, String)]
 parseFile s = reverse $ parseLines (collectLines $ lines s) []
 
-loadFile :: Editor -> String -> IO ()
-loadFile ed path = do
-  s <- readFile path
-  ls <- return $ parseFile s
-  ps <- mapM (\(x,y) -> makePair x y) ls
-  es <- return $ V.fromList ps
-  writeIORef ed es
-
-saveFile :: Editor -> String -> IO ()
-saveFile ed path = do
-  lines <- getLines ed
-  writeFile path (unlines lines)
-
 refreshView :: Editor -> EditorView -> IO ()
 refreshView ed view = do
   es <- getPairs ed
@@ -163,16 +162,10 @@ refreshView ed view = do
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
 
-runImport :: Editor -> IORef EditorView -> String -> IO ()
-runImport ed ev path = do
+runLoad :: Editor -> IORef EditorView -> (Editor -> String -> IO ()) -> String -> IO ()
+runLoad ed ev fn path = do
   view <- readIORef ev
-  importFile ed "file.orig"
-  refreshView ed view
-
-runLoad :: Editor -> IORef EditorView -> String -> IO ()
-runLoad ed ev path = do
-  view <- readIORef ev
-  loadFile ed "file.in"
+  fn ed path
   refreshView ed view
 
 newBoxButton :: (BoxClass a) => a -> String -> IO Button
@@ -220,9 +213,9 @@ main = runGUI $ do
   view <- readIORef ev
   onClicked minusButton (removeLine ed view)
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
-  onClicked loadButton (runLoad ed ev "file.in" >> widgetShowAll window)
+  onClicked loadButton (runLoad ed ev loadFile "file.in" >> widgetShowAll window)
   onClicked saveButton (saveFile ed "file.out")
   onClicked exitButton (G.widgetDestroy window)
-  onClicked importButton (runImport ed ev "file.orig" >> widgetShowAll window)
+  onClicked importButton (runLoad ed ev importFile "file.orig" >> widgetShowAll window)
 
   return window
