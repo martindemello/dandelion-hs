@@ -1,15 +1,11 @@
 import Graphics.UI.Gtk
 import Data.IORef
-import qualified Graphics.UI.Gtk as G hiding (Point)
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
-import qualified Graphics.UI.Gtk.Abstract.Widget as W
-import qualified Graphics.Rendering.Cairo as C
 import qualified Data.Vector as V
-import qualified Text.JSON as JSON
 import Data.Vector (Vector, (!))
-import Control.Monad.Trans (liftIO)
 
 import Datafile
+import GuiUtils
 
 -- a PairBox contains a VBox containing a Label and an Entry
 data PairBox = PairBox { pbOrig :: Label
@@ -47,23 +43,6 @@ pairOfPairBox pb = do
   a <- origText pb
   b <- newText pb
   return $ (a, b)
-
--- new textfield
-makeEntry :: String -> IO Entry
-makeEntry str = do
-  e <- entryNew
-  entrySetText e str
-  return e
-
--- new label
-makeLabel :: String -> IO Label
-makeLabel s = do
-  label <- labelNew (Just s)
-  miscSetAlignment label 0 0
-  return label
-
--- add widget to box with default params
-addToBox box widget = boxPackStart box widget PackNatural 0
 
 addPairToBox box v = addToBox box (pbVbox v)
 
@@ -143,26 +122,10 @@ refreshView ed view = do
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
 
-runLoad :: Editor -> IORef EditorView -> (Editor -> String -> IO ()) -> String -> IO ()
-runLoad ed ev fn path = do
-  view <- readIORef ev
+runLoad :: Editor -> EditorView -> (Editor -> String -> IO ()) -> String -> IO ()
+runLoad ed view fn path = do
   fn ed path
   refreshView ed view
-
-newBoxButton :: (BoxClass a) => a -> String -> IO Button
-newBoxButton box s = do
-  button <- buttonNew
-  set button [ buttonLabel := s ]
-  addToBox box button
-  return button
-
-runGUI :: IO Window -> IO ()
-runGUI gui = do
-  initGUI
-  window <- gui
-  onDestroy window mainQuit
-  widgetShowAll window
-  mainGUI
 
 main :: IO ()
 main = runGUI $ do
@@ -194,9 +157,9 @@ main = runGUI $ do
   view <- readIORef ev
   onClicked minusButton (removeLine ed view)
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
-  onClicked loadButton (runLoad ed ev loadFile "file.in" >> widgetShowAll window)
+  onClicked loadButton (runLoad ed view loadFile "file.in" >> widgetShowAll window)
   onClicked saveButton (saveFile ed "file.out")
-  onClicked exitButton (G.widgetDestroy window)
-  onClicked importButton (runLoad ed ev importFile "file.orig" >> widgetShowAll window)
+  onClicked exitButton (widgetDestroy window)
+  onClicked importButton (runLoad ed view importFile "file.orig" >> widgetShowAll window)
 
   return window
