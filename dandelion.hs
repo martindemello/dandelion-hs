@@ -19,6 +19,8 @@ data PairBox = PairBox { pbOrig :: Label
 
 type Editor = IORef (Vector PairBox)
 
+
+
 newEditor :: IO Editor
 newEditor = newIORef (V.empty)
 
@@ -108,19 +110,15 @@ getLines ed = do
 
 -- file <-> editor
 
-importFile :: Editor -> String -> IO ()
-importFile ed path = do
+processFile :: (String -> [a]) -> (a -> IO PairBox) -> Editor -> String -> IO ()
+processFile f g ed path = do
   s <- readFile path
-  ps <- mapM (\x -> makePair (x, "")) (lines s)
+  ps <- mapM g (f s)
   es <- return $ V.fromList ps
   writeIORef ed es
 
-loadFile :: Editor -> String -> IO ()
-loadFile ed path = do
-  s <- readFile path
-  ps <- mapM makePair (parseFile s)
-  es <- return $ V.fromList ps
-  writeIORef ed es
+importFile = processFile lines (\x -> makePair (x, ""))
+loadFile   = processFile parseFile makePair
 
 saveFile :: Editor -> String -> IO ()
 saveFile ed path = do
