@@ -103,6 +103,15 @@ getLines ed = do
   ls <- V.mapM stringOfPair es
   return $ V.toList ls
 
+-- file -> editor
+
+importFile :: Editor -> String -> IO ()
+importFile ed path = do
+  s <- readFile path
+  ps <- mapM makePair (lines s)
+  es <- return $ V.fromList ps
+  writeIORef ed es
+
 -- main functions
 addLine :: Editor -> EditorView -> String -> IO ()
 addLine ed view s = do
@@ -119,6 +128,19 @@ saveFile :: Editor -> String -> IO ()
 saveFile ed path = do
   lines <- getLines ed
   writeFile path (unlines lines)
+
+refreshView :: Editor -> EditorView -> IO ()
+refreshView ed view = do
+  es <- getPairs ed
+  box <- return $ displayBox view
+  containerForeach box (containerRemove box)
+  V.mapM_ (addPairToBox box) es
+
+runImport :: Editor -> IORef EditorView -> String -> IO ()
+runImport ed ev path = do
+  view <- readIORef ev
+  importFile ed "file.orig"
+  refreshView ed view
 
 newBoxButton :: (BoxClass a) => a -> String -> IO Button
 newBoxButton box s = do
@@ -153,6 +175,7 @@ main = runGUI $ do
   minusButton <- newBoxButton bbox "Remove"
   saveButton <- newBoxButton bbox "Save"
   exitButton <- newBoxButton bbox "Exit"
+  importButton <- newBoxButton bbox "Import"
 
   ed <- newEditor
   addLines ed 13
@@ -165,5 +188,6 @@ main = runGUI $ do
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
   onClicked saveButton (saveFile ed "file.out")
   onClicked exitButton (G.widgetDestroy window)
+  onClicked importButton (runImport ed ev "file.orig" >> widgetShowAll window)
 
   return window
