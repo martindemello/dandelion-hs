@@ -1,3 +1,5 @@
+-- pure functions converting between file contents and  [(String, String)]
+
 module Datafile (parseFile, parseImport, showFile, showExport) where
 
 import Data.String.Utils (strip)

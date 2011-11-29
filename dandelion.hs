@@ -2,7 +2,6 @@ import Graphics.UI.Gtk
 import Data.IORef
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Data.Vector as V
-import Data.Vector (Vector, (!))
 
 import Datafile
 import GuiUtils
@@ -27,13 +26,13 @@ addLine ed view s = do
 
 removeLine :: Editor -> EditorView -> IO ()
 removeLine ed view = do
-  es <- getPairs ed
+  es <- getContent ed
   e <- removeFromEditor ed
   containerRemove (displayBox view) (pbVbox e)
 
 refreshView :: Editor -> EditorView -> IO ()
 refreshView ed view = do
-  es <- getPairs ed
+  es <- getContent ed
   box <- return $ displayBox view
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
@@ -67,7 +66,7 @@ main = runGUI $ do
   ed <- newEditor
   addLines ed 13
 
-  eds <- getPairs ed
+  eds <- getContent ed
   V.mapM (addPairToBox ebox) eds
 
   view <- readIORef ev
