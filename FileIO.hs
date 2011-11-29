@@ -2,21 +2,24 @@ module FileIO (importFile, loadFile, saveFile) where
 
 import qualified Data.Vector as V
 import Data.IORef
+import Control.Monad ((>=>), (<=<), liftM)
 
-import Editor (Editor, makePairBox, getPairs)
+import Editor (Editor, PairBox, makePairBox, getPairs)
 import Datafile
 
-processFile :: (String -> [(String, String)]) -> Editor -> String -> IO ()
-processFile f ed path = do
-  s <- readFile path
-  ps <- mapM makePairBox (f s)
-  es <- return $ V.fromList ps
-  writeIORef ed es
+fromRawFile, fromSavedFile :: String -> IO [PairBox]
+fromRawFile = mapM makePairBox . parseImport
+fromSavedFile = mapM makePairBox . parseFile
 
-importFile = processFile parseImport
-loadFile   = processFile parseFile
+setEditor :: Editor -> [PairBox] -> IO ()
+setEditor ed = writeIORef ed . V.fromList
+
+importFile, loadFile :: Editor -> String -> IO ()
+importFile ed = readFile >=> fromRawFile >=> setEditor ed
+loadFile ed = readFile >=> fromSavedFile >=> setEditor ed
+
+getText :: Editor -> IO String
+getText ed = liftM showFile $ getPairs ed
 
 saveFile :: Editor -> String -> IO ()
-saveFile ed path = do
-  ls <- getPairs ed
-  writeFile path (showFile ls)
+saveFile ed path = getText ed >>= writeFile path
