@@ -25,6 +25,15 @@ newBoxButton box s = do
   addToBox box button
   return button
 
+-- file open dialog
+
+fileOpenDialog win = fileChooserDialogNew
+                       (Just "Open File")
+                       (Just win)
+                       FileChooserActionOpen
+                       [("gtk-open",ResponseAccept), ("gtk-cancel",ResponseCancel)]
+
+
 -- main gui loop
 runGUI :: IO Window -> IO ()
 runGUI gui = do

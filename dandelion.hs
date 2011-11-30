@@ -37,9 +37,17 @@ refreshView ed view = do
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
 
-runLoad :: Editor -> EditorView -> (Editor -> String -> IO ()) -> String -> IO ()
-runLoad ed view fn path = do
-  fn ed path
+runLoad :: Window -> Editor -> EditorView -> (Editor -> String -> IO ()) -> IO ()
+runLoad win ed view fn = do
+  fch <- fileOpenDialog win
+  response <- dialogRun fch
+  case response of
+       ResponseAccept -> do
+         Just path <- fileChooserGetFilename fch
+         fn ed path
+       ResponseCancel -> return ()
+       ResponseDeleteEvent -> return ()
+  widgetDestroy fch
   refreshView ed view
 
 main :: IO ()
@@ -72,9 +80,9 @@ main = runGUI $ do
   view <- readIORef ev
   onClicked minusButton (removeLine ed view)
   onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
-  onClicked loadButton (runLoad ed view loadFile "file.in" >> widgetShowAll window)
+  onClicked loadButton (runLoad window ed view loadFile >> widgetShowAll window)
   onClicked saveButton (saveFile ed "file.out")
   onClicked exitButton (widgetDestroy window)
-  onClicked importButton (runLoad ed view importFile "file.orig" >> widgetShowAll window)
+  onClicked importButton (runLoad window ed view importFile >> widgetShowAll window)
 
   return window
