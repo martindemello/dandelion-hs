@@ -72,11 +72,11 @@ main = runGUI $ do
   mapM_ (\ act -> actionGroupAddActionWithAccel agr act Nothing)
     [impa,opna,sava,svaa,cuta,copa,psta,hlpa]
 
-  actionGroupAddActionWithAccel agr exia (Just "<Control>e")
-
   ui <- uiManagerNew
   uiManagerAddUiFromString ui uiDecl
   uiManagerInsertActionGroup ui agr 0
+  acg <- uiManagerGetAccelGroup ui
+  windowAddAccelGroup window acg
 
   maybeMenubar <- uiManagerGetWidget ui "/ui/menubar"
   let menubar = case maybeMenubar of
@@ -110,6 +110,7 @@ main = runGUI $ do
 
   view <- readIORef ev
 
+  -- file menu
   onActionActivate exia (widgetDestroy window)
   onActionActivate opna (runLoad window ed view loadFile >> widgetShowAll window)
   onActionActivate sava (saveFile ed "file.out")
@@ -117,7 +118,7 @@ main = runGUI $ do
 
   return window
 
-uiDecl=  "<ui>\
+uiDecl = "<ui>\
 \           <menubar>\
 \            <menu action=\"FMA\">\
 \              <menuitem action=\"IMPA\" />\
