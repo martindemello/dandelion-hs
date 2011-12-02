@@ -55,22 +55,22 @@ main = runGUI $ do
   ema <- actionNew "EMA" "Edit" Nothing Nothing
   hma <- actionNew "HMA" "Help" Nothing Nothing
 
-  newa <- actionNew "NEWA" "New"     (Just "Just a Stub") (Just stockNew)
-  opna <- actionNew "OPNA" "Open"    (Just "Just a Stub") (Just stockOpen)
-  sava <- actionNew "SAVA" "Save"    (Just "Just a Stub") (Just stockSave)
-  svaa <- actionNew "SVAA" "Save As" (Just "Just a Stub") (Just stockSaveAs)
-  exia <- actionNew "EXIA" "Exit"    (Just "Just a Stub") (Just stockQuit)
- 
-  cuta <- actionNew "CUTA" "Cut"   (Just "Just a Stub") (Just stockCut)    
-  copa <- actionNew "COPA" "Copy"  (Just "Just a Stub") (Just stockCopy)
-  psta <- actionNew "PSTA" "Paste" (Just "Just a Stub") (Just stockPaste)
+  impa <- actionNew "IMPA" "Import"  (Just "Import file") (Just stockNew)
+  opna <- actionNew "OPNA" "Open"    (Just "Open file") (Just stockOpen)
+  sava <- actionNew "SAVA" "Save"    (Just "Save file") (Just stockSave)
+  svaa <- actionNew "SVAA" "Save As" (Just "Save file as") (Just stockSaveAs)
+  exia <- actionNew "EXIA" "Exit"    (Just "Exit") (Just stockQuit)
 
-  hlpa <- actionNew "HLPA" "Help"  (Just "Just a Stub") (Just stockHelp)
+  cuta <- actionNew "CUTA" "Cut"   (Just "Cut") (Just stockCut)
+  copa <- actionNew "COPA" "Copy"  (Just "Copy") (Just stockCopy)
+  psta <- actionNew "PSTA" "Paste" (Just "Paste") (Just stockPaste)
+
+  hlpa <- actionNew "HLPA" "Help"  (Just "Help") (Just stockHelp)
 
   agr <- actionGroupNew "AGR"
   mapM_ (actionGroupAddAction agr) [fma, ema, hma]
-  mapM_ (\ act -> actionGroupAddActionWithAccel agr act Nothing) 
-    [newa,opna,sava,svaa,cuta,copa,psta,hlpa]
+  mapM_ (\ act -> actionGroupAddActionWithAccel agr act Nothing)
+    [impa,opna,sava,svaa,cuta,copa,psta,hlpa]
 
   actionGroupAddActionWithAccel agr exia (Just "<Control>e")
 
@@ -81,21 +81,19 @@ main = runGUI $ do
   maybeMenubar <- uiManagerGetWidget ui "/ui/menubar"
   let menubar = case maybeMenubar of
                      (Just x) -> x
-                     Nothing -> error "Cannot get menubar from string." 
+                     Nothing -> error "Cannot get menubar from string."
   boxPackStart box menubar PackNatural 0
 
   maybeToolbar <- uiManagerGetWidget ui "/ui/toolbar"
   let toolbar = case maybeToolbar of
                      (Just x) -> x
-                     Nothing -> error "Cannot get toolbar from string." 
+                     Nothing -> error "Cannot get toolbar from string."
   boxPackStart box toolbar PackNatural 0
 
   actionSetSensitive cuta False
 
-  onActionActivate exia (widgetDestroy window)
-  mapM_ prAct [fma,ema,hma,newa,opna,sava,svaa,cuta,copa,psta,hlpa]
+  mapM_ prAct [svaa,cuta,copa,psta,hlpa]
 
-  bbox <- hBoxNew False 0
   ebox <- vBoxNew False 0
 
   ev <- newIORef EditorView { displayBox = ebox, currentLine = 0 }
@@ -103,14 +101,6 @@ main = runGUI $ do
   set window [ containerChild := box ]
 
   addToBox box ebox
-  addToBox box bbox
-
-  plusButton <- newBoxButton bbox "Add"
-  minusButton <- newBoxButton bbox "Remove"
-  loadButton <- newBoxButton bbox "Load"
-  saveButton <- newBoxButton bbox "Save"
-  importButton <- newBoxButton bbox "Import"
-  exitButton <- newBoxButton bbox "Exit"
 
   ed <- newEditor
   addLines ed 13
@@ -119,19 +109,18 @@ main = runGUI $ do
   V.mapM (addPairToBox ebox) eds
 
   view <- readIORef ev
-  onClicked minusButton (removeLine ed view)
-  onClicked plusButton (addLine ed view "" >> widgetShowAll ebox)
-  onClicked loadButton (runLoad window ed view loadFile >> widgetShowAll window)
-  onClicked saveButton (saveFile ed "file.out")
-  onClicked exitButton (widgetDestroy window)
-  onClicked importButton (runLoad window ed view importFile >> widgetShowAll window)
+
+  onActionActivate exia (widgetDestroy window)
+  onActionActivate opna (runLoad window ed view loadFile >> widgetShowAll window)
+  onActionActivate sava (saveFile ed "file.out")
+  onActionActivate impa (runLoad window ed view importFile >> widgetShowAll window)
 
   return window
-     
+
 uiDecl=  "<ui>\
 \           <menubar>\
 \            <menu action=\"FMA\">\
-\              <menuitem action=\"NEWA\" />\
+\              <menuitem action=\"IMPA\" />\
 \              <menuitem action=\"OPNA\" />\
 \              <menuitem action=\"SAVA\" />\
 \              <menuitem action=\"SVAA\" />\
@@ -149,7 +138,7 @@ uiDecl=  "<ui>\
 \            </menu>\
 \           </menubar>\
 \           <toolbar>\
-\            <toolitem action=\"NEWA\" />\
+\            <toolitem action=\"IMPA\" />\
 \            <toolitem action=\"OPNA\" />\
 \            <toolitem action=\"SAVA\" />\
 \            <toolitem action=\"EXIA\" />\
