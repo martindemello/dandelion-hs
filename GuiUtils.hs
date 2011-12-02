@@ -27,11 +27,19 @@ newBoxButton box s = do
 
 -- file open dialog
 
-fileOpenDialog win = fileChooserDialogNew
-                       (Just "Open File")
-                       (Just win)
-                       FileChooserActionOpen
-                       [("gtk-open",ResponseAccept), ("gtk-cancel",ResponseCancel)]
+fileOpenDialog win cb = do
+  fch <- fileChooserDialogNew (Just "Open File")
+                              (Just win)
+                              FileChooserActionOpen
+                              [("gtk-open",ResponseAccept), ("gtk-cancel",ResponseCancel)]
+  response <- dialogRun fch
+  case response of
+       ResponseAccept -> do
+         Just path <- fileChooserGetFilename fch
+         cb path
+       ResponseCancel -> return ()
+       ResponseDeleteEvent -> return ()
+  widgetDestroy fch
 
 
 -- main gui loop

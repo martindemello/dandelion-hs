@@ -39,15 +39,7 @@ refreshView ed view = do
 
 runLoad :: Window -> Editor -> EditorView -> (Editor -> String -> IO ()) -> IO ()
 runLoad win ed view fn = do
-  fch <- fileOpenDialog win
-  response <- dialogRun fch
-  case response of
-       ResponseAccept -> do
-         Just path <- fileChooserGetFilename fch
-         fn ed path
-       ResponseCancel -> return ()
-       ResponseDeleteEvent -> return ()
-  widgetDestroy fch
+  fch <- fileOpenDialog win (fn ed)
   refreshView ed view
 
 main :: IO ()
