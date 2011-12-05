@@ -51,9 +51,9 @@ main = runGUI $ do
   window <- windowNew
   box <- vBoxNew False 0
 
-  fma <- actionNew "FMA" "File" Nothing Nothing
-  ema <- actionNew "EMA" "Edit" Nothing Nothing
-  hma <- actionNew "HMA" "Help" Nothing Nothing
+  fma <- actionNew "FMA" "_File" Nothing Nothing
+  ema <- actionNew "EMA" "_Edit" Nothing Nothing
+  hma <- actionNew "HMA" "_Help" Nothing Nothing
 
   impa <- actionNew "IMPA" "Import"  (Just "Import file") (Just stockNew)
   opna <- actionNew "OPNA" "Open"    (Just "Open file") (Just stockOpen)
@@ -70,7 +70,7 @@ main = runGUI $ do
   agr <- actionGroupNew "AGR"
   mapM_ (actionGroupAddAction agr) [fma, ema, hma]
   mapM_ (\ act -> actionGroupAddActionWithAccel agr act Nothing)
-    [impa,opna,sava,svaa,cuta,copa,psta,hlpa]
+    [impa,opna,sava,svaa,exia,cuta,copa,psta,hlpa]
 
   ui <- uiManagerNew
   uiManagerAddUiFromString ui uiDecl
