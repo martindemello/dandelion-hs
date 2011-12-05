@@ -34,7 +34,7 @@ main = runGUI $ do
   box <- vBoxNew False 0
   ed <- newEditor
   ebox <- vBoxNew False 0
-  ev <- newIORef EditorView { displayBox = ebox, currentLine = 0 }
+  ev <- newIORef EditorView { displayBox = ebox, currentLine = 0, fileName = Nothing }
   view <- readIORef ev
   ui <- setupMenu window box ed view
 

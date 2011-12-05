@@ -10,6 +10,7 @@ import FileIO
 
 data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
+                             , fileName :: Maybe String
                              }
 
 addLine :: Editor -> EditorView -> String -> IO ()
@@ -31,7 +32,14 @@ refreshView ed view = do
   V.mapM_ (addPairToBox box) es
 
 runLoad :: Window -> Editor -> EditorView -> (Editor -> String -> IO ()) -> IO ()
-runLoad win ed view fn = do
-  fch <- fileOpenDialog win (fn ed)
+runLoad window ed view fn = do
+  fch <- fileOpenDialog window (fn ed)
   refreshView ed view
+  widgetShowAll window
+
+runSave :: Window -> Editor -> EditorView -> Bool -> IO ()
+runSave window ed view newFile =
+  case (newFile, fileName view) of
+       (False, Just path) -> saveFile ed path
+       _ -> fileSaveDialog window (saveFile ed)
 
