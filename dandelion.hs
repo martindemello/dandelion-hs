@@ -7,6 +7,7 @@ import Datafile
 import GuiUtils
 import Editor
 import FileIO
+import Menu
 
 data EditorView = EditorView { displayBox :: VBox
                              , currentLine :: Int
@@ -72,27 +73,12 @@ main = runGUI $ do
   mapM_ (\ act -> actionGroupAddActionWithAccel agr act Nothing)
     [impa,opna,sava,svaa,exia,cuta,copa,psta,hlpa]
 
-  ui <- uiManagerNew
-  uiManagerAddUiFromString ui uiDecl
-  uiManagerInsertActionGroup ui agr 0
-  acg <- uiManagerGetAccelGroup ui
-  windowAddAccelGroup window acg
-
-  maybeMenubar <- uiManagerGetWidget ui "/ui/menubar"
-  let menubar = case maybeMenubar of
-                     (Just x) -> x
-                     Nothing -> error "Cannot get menubar from string."
-  boxPackStart box menubar PackNatural 0
-
-  maybeToolbar <- uiManagerGetWidget ui "/ui/toolbar"
-  let toolbar = case maybeToolbar of
-                     (Just x) -> x
-                     Nothing -> error "Cannot get toolbar from string."
-  boxPackStart box toolbar PackNatural 0
 
   actionSetSensitive cuta False
 
   mapM_ prAct [svaa,cuta,copa,psta,hlpa]
+
+  ui <- makeMenu window box agr
 
   ebox <- vBoxNew False 0
 
@@ -117,38 +103,4 @@ main = runGUI $ do
   onActionActivate impa (runLoad window ed view importFile >> widgetShowAll window)
 
   return window
-
-uiDecl = "<ui>\
-\           <menubar>\
-\            <menu action=\"FMA\">\
-\              <menuitem action=\"IMPA\" />\
-\              <menuitem action=\"OPNA\" />\
-\              <menuitem action=\"SAVA\" />\
-\              <menuitem action=\"SVAA\" />\
-\              <separator />\
-\              <menuitem action=\"EXIA\" />\
-\            </menu>\
-\           <menu action=\"EMA\">\
-\              <menuitem action=\"CUTA\" />\
-\              <menuitem action=\"COPA\" />\
-\              <menuitem action=\"PSTA\" />\
-\           </menu>\
-\            <separator />\
-\            <menu action=\"HMA\">\
-\              <menuitem action=\"HLPA\" />\
-\            </menu>\
-\           </menubar>\
-\           <toolbar>\
-\            <toolitem action=\"IMPA\" />\
-\            <toolitem action=\"OPNA\" />\
-\            <toolitem action=\"SAVA\" />\
-\            <toolitem action=\"EXIA\" />\
-\            <separator />\
-\            <toolitem action=\"CUTA\" />\
-\            <toolitem action=\"COPA\" />\
-\            <toolitem action=\"PSTA\" />\
-\            <separator />\
-\            <toolitem action=\"HLPA\" />\
-\           </toolbar>\
-\          </ui>"
 
