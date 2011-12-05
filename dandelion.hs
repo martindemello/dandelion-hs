@@ -55,17 +55,17 @@ main = runGUI $ do
   ema <- actionNew "EMA" "_Edit" Nothing Nothing
   hma <- actionNew "HMA" "_Help" Nothing Nothing
 
-  impa <- actionNew "IMPA" "Import"  (Just "Import file") (Just stockNew)
-  opna <- actionNew "OPNA" "Open"    (Just "Open file") (Just stockOpen)
-  sava <- actionNew "SAVA" "Save"    (Just "Save file") (Just stockSave)
-  svaa <- actionNew "SVAA" "Save As" (Just "Save file as") (Just stockSaveAs)
-  exia <- actionNew "EXIA" "Exit"    (Just "Exit") (Just stockQuit)
+  impa <- actionNew "IMPA" "_Import"  (Just "Import file") (Just stockNew)
+  opna <- actionNew "OPNA" "_Open"    (Just "Open file") (Just stockOpen)
+  sava <- actionNew "SAVA" "_Save"    (Just "Save file") (Just stockSave)
+  svaa <- actionNew "SVAA" "Save _As" (Just "Save file as") (Just stockSaveAs)
+  exia <- actionNew "EXIA" "E_xit"    (Just "Exit") (Just stockQuit)
 
-  cuta <- actionNew "CUTA" "Cut"   (Just "Cut") (Just stockCut)
-  copa <- actionNew "COPA" "Copy"  (Just "Copy") (Just stockCopy)
-  psta <- actionNew "PSTA" "Paste" (Just "Paste") (Just stockPaste)
+  cuta <- actionNew "CUTA" "Cu_t"   (Just "Cut") (Just stockCut)
+  copa <- actionNew "COPA" "_Copy"  (Just "Copy") (Just stockCopy)
+  psta <- actionNew "PSTA" "_Paste" (Just "Paste") (Just stockPaste)
 
-  hlpa <- actionNew "HLPA" "Help"  (Just "Help") (Just stockHelp)
+  hlpa <- actionNew "HLPA" "_Help"  (Just "Help") (Just stockHelp)
 
   agr <- actionGroupNew "AGR"
   mapM_ (actionGroupAddAction agr) [fma, ema, hma]
