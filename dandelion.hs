@@ -47,6 +47,14 @@ runLoad win ed view fn = do
   fch <- fileOpenDialog win (fn ed)
   refreshView ed view
 
+addFocusHandler :: Editor -> Int -> IO ()
+addFocusHandler ed i = do
+  p <- Editor.getLine ed i
+  e <- return $ pbText p
+  onFocusIn e $ \dirtype -> putStrLn ("focused" ++ show i) >> return False
+  return ()
+
+
 main :: IO ()
 main = runGUI $ do
   window <- windowNew
@@ -93,6 +101,8 @@ main = runGUI $ do
 
   eds <- getContent ed
   V.mapM (addPairToBox ebox) eds
+
+  mapM_ (addFocusHandler ed) [0 .. (V.length eds - 1)]
 
   view <- readIORef ev
 
