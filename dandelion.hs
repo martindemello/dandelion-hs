@@ -24,7 +24,7 @@ addFocusHandler :: Editor -> EditorView -> Int -> IO ()
 addFocusHandler ed ev i = do
   p <- Editor.getLine ed i
   e <- return $ pbText p
-  onFocusIn e $ \dirtype -> setStatus ev ("Line " ++ show i) >> return False
+  onFocusIn e $ \dirtype -> setLine ev i >> return False
   return ()
 
 
@@ -35,9 +35,16 @@ main = runGUI $ do
   ed <- newEditor
   ebox <- vBoxNew False 0
   sbar <- hBoxNew False 0
-  status <- makeLabel "Line 0"
-  ev <- newIORef EditorView { displayBox = ebox, status = status, currentLine = 0, fileName = Nothing }
-  view <- readIORef ev
+  status <- makeLabel ""
+  lnum  <- newIORef 0
+  fname <- newIORef Nothing
+  view <- return $ EditorView { displayBox = ebox
+                              , status = status
+                              , currentLine = lnum
+                              , fileName = fname
+                              }
+  setStatus view
+
   ui <- setupMenu window box ed view
 
   set window [ containerChild := box ]

@@ -7,11 +7,12 @@ import Datafile
 import GuiUtils
 import Editor
 import FileIO
+import Data.IORef
 
 data EditorView = EditorView { displayBox :: VBox
                              , status :: Label
-                             , currentLine :: Int
-                             , fileName :: Maybe String
+                             , currentLine :: IORef Int
+                             , fileName :: IORef (Maybe String)
                              }
 
 addLine :: Editor -> EditorView -> String -> IO ()
@@ -39,12 +40,29 @@ runLoad window ed view fn = do
   widgetShowAll window
 
 runSave :: Window -> Editor -> EditorView -> Bool -> IO ()
-runSave window ed view newFile =
-  case (newFile, fileName view) of
+runSave window ed view newFile = do
+  f <- readIORef $ fileName view
+  case (newFile, f) of
        (False, Just path) -> saveFile ed path
        _ -> fileSaveDialog window (saveFile ed)
 
-setStatus :: EditorView -> String -> IO ()
-setStatus ev newStat = do
+setFilename :: EditorView -> String -> IO ()
+setFilename ev fname = do
+  writeIORef (fileName ev) (Just fname)
+  setStatus ev 
+
+setLine :: EditorView -> Int -> IO ()
+setLine ev i = do
+  writeIORef (currentLine ev) i
+  setStatus ev 
+
+showFilename :: Maybe String -> String
+showFilename Nothing = "[None]"
+showFilename (Just s) = s
+
+setStatus :: EditorView -> IO ()
+setStatus ev = do
   s <- return $ status ev
-  labelSetText s newStat
+  f <- readIORef $ fileName ev
+  i <- readIORef $ currentLine ev
+  labelSetText s ("File: " ++ (showFilename f) ++ " Line: " ++ show (i + 1)) 
