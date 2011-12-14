@@ -9,41 +9,72 @@ import Editor
 import FileIO
 import Data.IORef
 
-data EditorView = EditorView { displayBox :: VBox
+data EditorView = EditorView { evEditor :: IORef Editor
+                             , displayBox :: VBox
                              , status :: Label
                              , currentLine :: IORef Int
                              , fileName :: IORef (Maybe String)
                              }
 
-addLine :: Editor -> EditorView -> String -> IO ()
-addLine ed view s = do
+newEditorView :: Editor -> VBox -> Label -> HBox -> IO EditorView
+newEditorView ed ebox status sbar = do
+  lnum  <- newIORef 0
+  fname <- newIORef Nothing
+  ie <- newIORef ed
+  return $ EditorView { evEditor = ie
+                      , displayBox = ebox
+                      , status = status
+                      , currentLine = lnum
+                      , fileName = fname
+                      }
+
+getEditor :: EditorView -> IO Editor
+getEditor view = readIORef $ evEditor view
+
+addLine :: EditorView -> String -> IO ()
+addLine view s = do
+  ed <- getEditor view
   l <- addNewLine ed s
   addPairToBox (displayBox view) l
 
-removeLine :: Editor -> EditorView -> IO ()
-removeLine ed view = do
+removeLine :: EditorView -> IO ()
+removeLine view = do
+  ed <- getEditor view
   es <- getContent ed
   e <- removeFromEditor ed
   containerRemove (displayBox view) (pbVbox e)
 
-refreshView :: Editor -> EditorView -> IO ()
-refreshView ed view = do
+addFocusHandler :: EditorView -> Int -> IO ()
+addFocusHandler view i = do
+  ed <- getEditor view
+  p <- Editor.getLine ed i
+  e <- return $ pbText p
+  onFocusIn e $ \dirtype -> setLine view i >> return False
+  return ()
+
+refreshView :: EditorView -> IO ()
+refreshView view = do
+  ed <- getEditor view
   es <- getContent ed
   box <- return $ displayBox view
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
+  mapM_ (addFocusHandler view) [0 .. (V.length es - 1)]
+  setStatus view
 
-runLoad :: (Editor -> String -> IO ()) -> Window -> Editor -> EditorView -> IO ()
-runLoad fn window ed view = do
+runLoad :: (Editor -> String -> IO ()) -> Window -> EditorView -> IO ()
+runLoad fn window view = do
+  ed <- getEditor view
   fch <- fileOpenDialog window (fn ed)
-  refreshView ed view
+  refreshView view
   widgetShowAll window
 
 runLoadFile = runLoad loadFile
 runImportFile = runLoad importFile
 
-runSave :: Bool -> Window -> Editor -> EditorView -> IO ()
-runSave newFile window ed view = do
+runSave :: Bool -> Window -> EditorView -> IO ()
+runSave newFile window view = do
+  ed <- getEditor view
   f <- readIORef $ fileName view
   case (newFile, f) of
        (False, Just path) -> saveFile ed path
