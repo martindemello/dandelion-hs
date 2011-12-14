@@ -25,35 +25,34 @@ newBoxButton box s = do
   addToBox box button
   return button
 
--- file open dialog
+-- file chooser dialogs (open, save, import, export)
 
+runFileDialog :: FileChooserDialog -> Window -> (String -> IO ()) -> IO ()
+runFileDialog fch win cb = do
+  response <- dialogRun fch
+  case response of
+       ResponseAccept -> do
+         Just path <- fileChooserGetFilename fch
+         cb path
+       ResponseCancel -> return ()
+       ResponseDeleteEvent -> return ()
+  widgetDestroy fch
+
+fileOpenDialog :: Window -> (String -> IO ()) -> IO ()
 fileOpenDialog win cb = do
   fch <- fileChooserDialogNew (Just "Open File")
                               (Just win)
                               FileChooserActionOpen
                               [("gtk-open",ResponseAccept), ("gtk-cancel",ResponseCancel)]
-  response <- dialogRun fch
-  case response of
-       ResponseAccept -> do
-         Just path <- fileChooserGetFilename fch
-         cb path
-       ResponseCancel -> return ()
-       ResponseDeleteEvent -> return ()
-  widgetDestroy fch
+  runFileDialog fch win cb
 
+fileSaveExportDialog :: String -> Window -> (String -> IO ()) -> IO ()
 fileSaveExportDialog title win cb = do
   fch <- fileChooserDialogNew (Just title)
                               (Just win)
                               FileChooserActionSave
                               [("gtk-save",ResponseAccept), ("gtk-cancel",ResponseCancel)]
-  response <- dialogRun fch
-  case response of
-       ResponseAccept -> do
-         Just path <- fileChooserGetFilename fch
-         cb path
-       ResponseCancel -> return ()
-       ResponseDeleteEvent -> return ()
-  widgetDestroy fch
+  runFileDialog fch win cb
 
 fileSaveDialog = fileSaveExportDialog "Save File"
 fileExportDialog = fileSaveExportDialog "Export File"
