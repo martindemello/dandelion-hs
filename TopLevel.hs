@@ -13,19 +13,16 @@ data EditorView = EditorView { evEditor :: IORef Editor
                              , displayBox :: VBox
                              , status :: Label
                              , currentLine :: IORef Int
-                             , fileName :: IORef (Maybe String)
                              }
 
 newEditorView :: Editor -> VBox -> Label -> HBox -> IO EditorView
 newEditorView ed ebox status sbar = do
   lnum  <- newIORef 0
-  fname <- newIORef Nothing
   ie <- newIORef ed
   return $ EditorView { evEditor = ie
                       , displayBox = ebox
                       , status = status
                       , currentLine = lnum
-                      , fileName = fname
                       }
 
 getEditor :: EditorView -> IO Editor
@@ -75,7 +72,7 @@ runImportFile = runLoad importFile
 runSave :: Bool -> Window -> EditorView -> IO ()
 runSave newFile window view = do
   ed <- getEditor view
-  f <- readIORef $ fileName view
+  f <- readIORef $ edFilename ed
   case (newFile, f) of
        (False, Just path) -> saveFile ed path
        _ -> fileSaveDialog window (saveFile ed)
@@ -84,22 +81,24 @@ runSaveFile = runSave False
 runSaveFileAs = runSave True
 
 setFilename :: EditorView -> String -> IO ()
-setFilename ev fname = do
-  writeIORef (fileName ev) (Just fname)
-  setStatus ev 
+setFilename view fname = do
+  ed <- getEditor view
+  writeIORef (edFilename ed) (Just fname)
+  setStatus view
 
 setLine :: EditorView -> Int -> IO ()
-setLine ev i = do
-  writeIORef (currentLine ev) i
-  setStatus ev 
+setLine view i = do
+  writeIORef (currentLine view) i
+  setStatus view
 
 showFilename :: Maybe String -> String
 showFilename Nothing = "[None]"
 showFilename (Just s) = s
 
 setStatus :: EditorView -> IO ()
-setStatus ev = do
-  s <- return $ status ev
-  f <- readIORef $ fileName ev
-  i <- readIORef $ currentLine ev
-  labelSetText s ("File: " ++ (showFilename f) ++ " Line: " ++ show (i + 1)) 
+setStatus view = do
+  ed <- getEditor view
+  s <- return $ status view
+  f <- readIORef $ edFilename ed
+  i <- readIORef $ currentLine view
+  labelSetText s ("File: " ++ (showFilename f) ++ " Line: " ++ show (i + 1))

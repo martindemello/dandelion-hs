@@ -90,3 +90,6 @@ getFilename ed = readIORef $ edFilename ed
 
 setFilename :: Editor -> String -> IO ()
 setFilename ed fname = writeIORef (edFilename ed) (Just fname)
+
+clearFilename :: Editor -> IO ()
+clearFilename ed = writeIORef (edFilename ed) Nothing
