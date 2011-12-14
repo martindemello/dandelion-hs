@@ -20,11 +20,11 @@ prAct :: ActionClass self => self -> IO (ConnectId self)
 prAct a = onActionActivate a $ do name <- actionGetName a
                                   putStrLn ("Action Name: " ++ name)
 
-addFocusHandler :: Editor -> Int -> IO ()
-addFocusHandler ed i = do
+addFocusHandler :: Editor -> EditorView -> Int -> IO ()
+addFocusHandler ed ev i = do
   p <- Editor.getLine ed i
   e <- return $ pbText p
-  onFocusIn e $ \dirtype -> putStrLn ("focused" ++ show i) >> return False
+  onFocusIn e $ \dirtype -> setStatus ev ("Line " ++ show i) >> return False
   return ()
 
 
@@ -34,19 +34,23 @@ main = runGUI $ do
   box <- vBoxNew False 0
   ed <- newEditor
   ebox <- vBoxNew False 0
-  ev <- newIORef EditorView { displayBox = ebox, currentLine = 0, fileName = Nothing }
+  sbar <- hBoxNew False 0
+  status <- makeLabel "Line 0"
+  ev <- newIORef EditorView { displayBox = ebox, status = status, currentLine = 0, fileName = Nothing }
   view <- readIORef ev
   ui <- setupMenu window box ed view
 
   set window [ containerChild := box ]
 
+  addToBox sbar status
   addToBox box ebox
+  addToBox box sbar
 
   addLines ed 13
 
   eds <- getContent ed
   V.mapM (addPairToBox ebox) eds
 
-  mapM_ (addFocusHandler ed) [0 .. (V.length eds - 1)]
+  mapM_ (addFocusHandler ed view) [0 .. (V.length eds - 1)]
 
   return window

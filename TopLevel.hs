@@ -9,6 +9,7 @@ import Editor
 import FileIO
 
 data EditorView = EditorView { displayBox :: VBox
+                             , status :: Label
                              , currentLine :: Int
                              , fileName :: Maybe String
                              }
@@ -43,3 +44,7 @@ runSave window ed view newFile =
        (False, Just path) -> saveFile ed path
        _ -> fileSaveDialog window (saveFile ed)
 
+setStatus :: EditorView -> String -> IO ()
+setStatus ev newStat = do
+  s <- return $ status ev
+  labelSetText s newStat
