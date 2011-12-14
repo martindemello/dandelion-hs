@@ -85,12 +85,6 @@ runExportFile window view = do
   ed <- getEditor view
   fileExportDialog window (exportFile ed)
 
-setFilename :: EditorView -> String -> IO ()
-setFilename view fname = do
-  ed <- getEditor view
-  writeIORef (edFilename ed) (Just fname)
-  setStatus view
-
 setLine :: EditorView -> Int -> IO ()
 setLine view i = do
   writeIORef (currentLine view) i
