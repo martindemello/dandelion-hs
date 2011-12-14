@@ -13,14 +13,19 @@ data PairBox = PairBox { pbOrig :: Label
                        , pbVbox :: VBox
                        }
 
-type Editor = IORef (Vector PairBox)
+data Editor = Editor { edPairs    :: IORef (Vector PairBox)
+                     , edFilename :: IORef (Maybe String)
+                     }
 
 newEditor :: IO Editor
-newEditor = newIORef (V.empty)
+newEditor = do
+  e <- newIORef (V.empty)
+  f <- newIORef Nothing
+  return $ Editor { edPairs = e, edFilename = f }
 
 -- just in case we change the internal representation of Editor
 getContent :: Editor -> IO (Vector PairBox)
-getContent ed = readIORef ed
+getContent ed = readIORef $ edPairs ed
 
 -- pairbox functions
 makePairBox :: (String, String) -> IO PairBox
@@ -49,15 +54,15 @@ addPairToBox box v = addToBox box (pbVbox v)
 -- editor functions
 addToEditor :: Editor -> PairBox -> IO Editor
 addToEditor ed w = do
-  es <- readIORef ed
-  writeIORef ed (es `V.snoc` w)
+  es <- getContent ed
+  writeIORef (edPairs ed) (es `V.snoc` w)
   return ed
 
 removeFromEditor :: Editor -> IO PairBox
 removeFromEditor ed = do
-  es <- readIORef ed
+  es <- getContent ed
   e <- return $ V.last es
-  writeIORef ed (V.init es)
+  writeIORef (edPairs ed) (V.init es)
   return e
 
 addNewLine :: Editor -> String -> IO PairBox
@@ -68,7 +73,7 @@ addNewLine ed s = do
 
 getLine :: Editor -> Int -> IO PairBox
 getLine ed i = do
-  es <- readIORef ed
+  es <- getContent ed
   return (es ! i)
 
 getPairs :: Editor -> IO [(String, String)]
@@ -76,3 +81,12 @@ getPairs ed = do
   es <- getContent ed
   ls <- V.mapM pairOfPairBox es
   return $ V.toList ls
+
+setPairs :: Editor -> [PairBox] -> IO ()
+setPairs ed = writeIORef (edPairs ed) . V.fromList
+
+getFilename :: Editor -> IO (Maybe String)
+getFilename ed = readIORef $ edFilename ed
+
+setFilename :: Editor -> String -> IO ()
+setFilename ed fname = writeIORef (edFilename ed) (Just fname)

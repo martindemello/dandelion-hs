@@ -33,18 +33,24 @@ refreshView ed view = do
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
 
-runLoad :: Window -> Editor -> EditorView -> (Editor -> String -> IO ()) -> IO ()
-runLoad window ed view fn = do
+runLoad :: (Editor -> String -> IO ()) -> Window -> Editor -> EditorView -> IO ()
+runLoad fn window ed view = do
   fch <- fileOpenDialog window (fn ed)
   refreshView ed view
   widgetShowAll window
 
-runSave :: Window -> Editor -> EditorView -> Bool -> IO ()
-runSave window ed view newFile = do
+runLoadFile = runLoad loadFile
+runImportFile = runLoad importFile
+
+runSave :: Bool -> Window -> Editor -> EditorView -> IO ()
+runSave newFile window ed view = do
   f <- readIORef $ fileName view
   case (newFile, f) of
        (False, Just path) -> saveFile ed path
        _ -> fileSaveDialog window (saveFile ed)
+
+runSaveFile = runSave False
+runSaveFileAs = runSave True
 
 setFilename :: EditorView -> String -> IO ()
 setFilename ev fname = do
