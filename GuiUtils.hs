@@ -41,8 +41,8 @@ fileOpenDialog win cb = do
        ResponseDeleteEvent -> return ()
   widgetDestroy fch
 
-fileSaveDialog win cb = do
-  fch <- fileChooserDialogNew (Just "Save File")
+fileSaveExportDialog title win cb = do
+  fch <- fileChooserDialogNew (Just title)
                               (Just win)
                               FileChooserActionSave
                               [("gtk-save",ResponseAccept), ("gtk-cancel",ResponseCancel)]
@@ -55,6 +55,9 @@ fileSaveDialog win cb = do
        ResponseDeleteEvent -> return ()
   widgetDestroy fch
 
+fileSaveDialog = fileSaveExportDialog "Save File"
+fileExportDialog = fileSaveExportDialog "Export File"
+
 -- main gui loop
 runGUI :: IO Window -> IO ()
 runGUI gui = do
@@ -63,4 +66,3 @@ runGUI gui = do
   onDestroy window mainQuit
   widgetShowAll window
   mainGUI
-

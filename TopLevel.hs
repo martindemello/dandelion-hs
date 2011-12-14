@@ -80,6 +80,11 @@ runSave newFile window view = do
 runSaveFile = runSave False
 runSaveFileAs = runSave True
 
+runExportFile :: Window -> EditorView -> IO ()
+runExportFile window view = do
+  ed <- getEditor view
+  fileExportDialog window (exportFile ed)
+
 setFilename :: EditorView -> String -> IO ()
 setFilename view fname = do
   ed <- getEditor view
