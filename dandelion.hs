@@ -28,9 +28,6 @@ main = runGUI $ do
   ebox <- vBoxNew False 0
   sbar <- hBoxNew False 0
   status <- makeLabel ""
-  lnum  <- newIORef 0
-  fname <- newIORef Nothing
-  ie <- newIORef ed
   view <- newEditorView ed ebox status sbar
 
   ui <- setupMenu window box ed view
