@@ -23,22 +23,36 @@ prAct a = onActionActivate a $ do name <- actionGetName a
 main :: IO ()
 main = runGUI $ do
   window <- windowNew
+  set window [windowTitle := "Dandelion"]
+
   box <- vBoxNew False 0
+
+  ntbk <- notebookNew
+  set ntbk [notebookScrollable := True, notebookTabPos := PosTop]
+
   ed <- newEditor
   ebox <- vBoxNew False 0
+
+  scrwin <- scrolledWindowNew Nothing Nothing
+  scrolledWindowSetPolicy scrwin PolicyAutomatic PolicyAlways
+  scrolledWindowAddWithViewport scrwin ebox
+
+  notebookAppendPage ntbk scrwin "[None]"
+
   sbar <- hBoxNew False 0
   status <- makeLabel ""
+  addToBox sbar status
+
   view <- newEditorView ed ebox status sbar
 
   ui <- setupMenu window box ed view
 
   set window [ containerChild := box ]
 
-  addToBox sbar status
-  addToBox box ebox
+  boxPackStart box ntbk PackGrow 5
   addToBox box sbar
 
-  addLines ed 13
+  addLines ed 3
   refreshView view
 
   return window

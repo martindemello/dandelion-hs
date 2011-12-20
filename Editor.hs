@@ -33,8 +33,9 @@ makePairBox (l, s) = do
   box <- vBoxNew False 0
   label <- makeLabel l
   entry <- makeEntry s
-  addToBox box label
-  addToBox box entry
+  entrySetHasFrame entry False
+  boxPackStart box label PackNatural 2
+  boxPackStart box entry PackNatural 0
   return $ PairBox { pbOrig = label, pbText = entry, pbVbox = box }
 
 origText :: PairBox -> IO String
