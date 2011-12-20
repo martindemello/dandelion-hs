@@ -7,8 +7,8 @@ import Data.Vector (Vector, (!))
 
 import GuiUtils
 
--- a PairBox contains a VBox containing a Label and an Entry
-data PairBox = PairBox { pbOrig :: Label
+-- a PairBox contains a VBox containing original text and annotation
+data PairBox = PairBox { pbOrig :: Entry
                        , pbText :: Entry
                        , pbVbox :: VBox
                        }
@@ -31,15 +31,17 @@ getContent ed = readIORef $ edPairs ed
 makePairBox :: (String, String) -> IO PairBox
 makePairBox (l, s) = do
   box <- vBoxNew False 0
-  label <- makeLabel l
-  entry <- makeEntry s
-  entrySetHasFrame entry False
-  boxPackStart box label PackNatural 2
-  boxPackStart box entry PackNatural 0
-  return $ PairBox { pbOrig = label, pbText = entry, pbVbox = box }
+  orig <- makeEntry l
+  text <- makeEntry s
+  set orig [entryEditable := False, entryHasFrame := False, widgetCanFocus := False]
+  widgetModifyBase orig StateNormal (Color 55000 60000 65535)
+  entrySetHasFrame text False
+  boxPackStart box orig PackNatural 0
+  boxPackStart box text PackNatural 0
+  return $ PairBox { pbOrig = orig, pbText = text, pbVbox = box }
 
 origText :: PairBox -> IO String
-origText pb = (labelGetText . pbOrig) pb
+origText pb = (entryGetText . pbOrig) pb
 
 newText :: PairBox -> IO String
 newText pb = (entryGetText . pbText) pb
