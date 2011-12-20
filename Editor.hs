@@ -35,7 +35,7 @@ makePairBox (l, s) = do
   text <- makeEntry s
   set orig [entryEditable := False, entryHasFrame := False, widgetCanFocus := False]
   widgetModifyBase orig StateNormal (Color 55000 60000 65535)
-  entrySetHasFrame text False
+  entrySetHasFrame text True
   boxPackStart box orig PackNatural 0
   boxPackStart box text PackNatural 0
   return $ PairBox { pbOrig = orig, pbText = text, pbVbox = box }
