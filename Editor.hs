@@ -14,14 +14,14 @@ data PairBox = PairBox { pbOrig :: Entry
                        }
 
 data Editor = Editor { edPairs    :: IORef (Vector PairBox)
-                     , edFilename :: IORef (Maybe String)
+                     , edFilePath :: IORef (Maybe String)
                      }
 
 newEditor :: IO Editor
 newEditor = do
   e <- newIORef (V.empty)
   f <- newIORef Nothing
-  return $ Editor { edPairs = e, edFilename = f }
+  return $ Editor { edPairs = e, edFilePath = f }
 
 -- just in case we change the internal representation of Editor
 getContent :: Editor -> IO (Vector PairBox)
@@ -88,11 +88,11 @@ getPairs ed = do
 setPairs :: Editor -> [PairBox] -> IO ()
 setPairs ed = writeIORef (edPairs ed) . V.fromList
 
-getFilename :: Editor -> IO (Maybe String)
-getFilename ed = readIORef $ edFilename ed
+getFilePath :: Editor -> IO (Maybe String)
+getFilePath ed = readIORef $ edFilePath ed
 
-setFilename :: Editor -> String -> IO ()
-setFilename ed fname = writeIORef (edFilename ed) (Just fname)
+setFilePath :: Editor -> String -> IO ()
+setFilePath ed fname = writeIORef (edFilePath ed) (Just fname)
 
-clearFilename :: Editor -> IO ()
-clearFilename ed = writeIORef (edFilename ed) Nothing
+clearFilePath :: Editor -> IO ()
+clearFilePath ed = writeIORef (edFilePath ed) Nothing

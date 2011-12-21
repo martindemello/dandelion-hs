@@ -3,7 +3,7 @@ module FileIO (importFile, loadFile, saveFile, exportFile) where
 import qualified Data.Vector as V
 import Control.Monad ((>=>), (<=<), (>>), liftM)
 
-import Editor (Editor, PairBox, makePairBox, getPairs, setPairs, setFilename, clearFilename)
+import Editor (Editor, PairBox, makePairBox, getPairs, setPairs, setFilePath, clearFilePath)
 import Datafile
 
 -- File -> Editor
@@ -20,11 +20,11 @@ loadFile, importFile :: Editor -> String -> IO ()
 
 loadFile ed path = do
   replaceFile fromSavedFile ed path
-  setFilename ed path
+  setFilePath ed path
 
 importFile ed path = do
   replaceFile fromRawFile ed path
-  clearFilename ed
+  clearFilePath ed
 
 -- Editor -> File
 
@@ -36,6 +36,6 @@ saveFile, exportFile :: Editor -> String -> IO ()
 
 saveFile ed path = do
   getText ed >>= writeFile path
-  setFilename ed path
+  setFilePath ed path
 
 exportFile ed path = getExport ed >>= writeFile path

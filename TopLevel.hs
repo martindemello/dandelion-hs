@@ -83,7 +83,7 @@ runImportFile = runLoad importFile
 runSave :: Bool -> Window -> EditorView -> IO ()
 runSave newFile window view = do
   ed <- getEditor view
-  f <- readIORef $ edFilename ed
+  f <- readIORef $ edFilePath ed
   case (newFile, f) of
        (False, Just path) -> saveFile ed path
        _ -> fileSaveDialog window (saveFile ed)
@@ -103,16 +103,16 @@ setLine view i = do
   writeIORef (currentLine view) i
   setStatus view
 
-showFilename :: Maybe String -> String
-showFilename Nothing = "[None]"
-showFilename (Just s) = s
+showFilePath :: Maybe String -> String
+showFilePath Nothing = "[None]"
+showFilePath (Just s) = s
 
 statusLine :: EditorView -> IO String
 statusLine view = do
   ed <- getEditor view
-  f <- readIORef $ edFilename ed
+  f <- readIORef $ edFilePath ed
   i <- readIORef $ currentLine view
-  return $ "File: " ++ (showFilename f) ++ " Line: " ++ show (i + 1)
+  return $ "File: " ++ (showFilePath f) ++ " Line: " ++ show (i + 1)
 
 setStatus :: EditorView -> IO ()
 setStatus view = do
@@ -125,5 +125,5 @@ setNotebookTabLabel view = do
   nb <- return $ toNotebook $ noteBook view
   sp <- return $ scrollPane view
   ed <- getEditor view
-  f <- readIORef $ edFilename ed
-  notebookSetTabLabelText nb sp (takeFileName $ showFilename f)
+  f <- readIORef $ edFilePath ed
+  notebookSetTabLabelText nb sp (takeFileName $ showFilePath f)
