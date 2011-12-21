@@ -43,7 +43,7 @@ main = runGUI $ do
   status <- makeLabel ""
   addToBox sbar status
 
-  view <- newEditorView ed ebox status sbar
+  view <- newEditorView ed ebox ntbk scrwin status sbar
 
   ui <- setupMenu window box ed view
 

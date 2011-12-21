@@ -1,6 +1,7 @@
 module TopLevel where
 
 import Graphics.UI.Gtk
+import System.FilePath
 import qualified Data.Vector as V
 
 import Datafile
@@ -11,16 +12,21 @@ import Data.IORef
 
 data EditorView = EditorView { evEditor :: IORef Editor
                              , displayBox :: VBox
+                             , noteBook :: Notebook
+                             , scrollPane :: ScrolledWindow
                              , status :: Label
                              , currentLine :: IORef Int
                              }
 
-newEditorView :: Editor -> VBox -> Label -> HBox -> IO EditorView
-newEditorView ed ebox status sbar = do
+newEditorView :: Editor -> VBox -> Notebook -> ScrolledWindow
+  -> Label -> HBox -> IO EditorView
+newEditorView ed ebox ntbk swin status sbar = do
   lnum  <- newIORef 0
   ie <- newIORef ed
   return $ EditorView { evEditor = ie
                       , displayBox = ebox
+                      , noteBook = ntbk
+                      , scrollPane = swin
                       , status = status
                       , currentLine = lnum
                       }
@@ -57,7 +63,12 @@ refreshView view = do
   containerForeach box (containerRemove box)
   V.mapM_ (addPairToBox box) es
   mapM_ (addFocusHandler view) [0 .. (V.length es - 1)]
-  setStatus view
+  refreshStatus view
+
+refreshStatus :: EditorView -> IO ()
+refreshStatus view =
+  setStatus view >>
+  setNotebookTabLabel view
 
 runLoad :: (Editor -> String -> IO ()) -> Window -> EditorView -> IO ()
 runLoad fn window view = do
@@ -76,6 +87,8 @@ runSave newFile window view = do
   case (newFile, f) of
        (False, Just path) -> saveFile ed path
        _ -> fileSaveDialog window (saveFile ed)
+  refreshStatus view
+  widgetShowAll window
 
 runSaveFile = runSave False
 runSaveFileAs = runSave True
@@ -94,10 +107,23 @@ showFilename :: Maybe String -> String
 showFilename Nothing = "[None]"
 showFilename (Just s) = s
 
-setStatus :: EditorView -> IO ()
-setStatus view = do
+statusLine :: EditorView -> IO String
+statusLine view = do
   ed <- getEditor view
-  s <- return $ status view
   f <- readIORef $ edFilename ed
   i <- readIORef $ currentLine view
-  labelSetText s ("File: " ++ (showFilename f) ++ " Line: " ++ show (i + 1))
+  return $ "File: " ++ (showFilename f) ++ " Line: " ++ show (i + 1)
+
+setStatus :: EditorView -> IO ()
+setStatus view = do
+  s <- return $ status view
+  text <- statusLine view
+  labelSetText s text
+
+setNotebookTabLabel :: EditorView -> IO ()
+setNotebookTabLabel view = do
+  nb <- return $ toNotebook $ noteBook view
+  sp <- return $ scrollPane view
+  ed <- getEditor view
+  f <- readIORef $ edFilename ed
+  notebookSetTabLabelText nb sp (takeFileName $ showFilename f)
