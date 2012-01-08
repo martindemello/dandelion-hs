@@ -1,4 +1,4 @@
-module TopLevel where
+module EditorView where
 
 import Graphics.UI.Gtk
 import System.FilePath

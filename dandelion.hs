@@ -8,7 +8,7 @@ import GuiUtils
 import Editor
 import FileIO
 import Menu
-import TopLevel
+import EditorView
 
 -- scaffolding to test gui functionality during development
 addLines :: Editor -> Int -> IO Editor
