@@ -10,13 +10,29 @@ import Editor
 import FileIO
 import Data.IORef
 
-data EditorView = EditorView { evEditor :: IORef Editor
-                             , displayBox :: VBox
-                             , noteBook :: Notebook
-                             , scrollPane :: ScrolledWindow
-                             , status :: Label
+data EditorView = EditorView { evEditor    :: IORef Editor
+                             , displayBox  :: VBox
+                             , noteBook    :: Notebook
+                             , scrollPane  :: ScrolledWindow
+                             , status      :: Label
                              , currentLine :: IORef Int
                              }
+
+data PairView = PairView { pvPairBox :: PairBox
+                         , pvMargin  :: Label
+                         , pvBox     :: HBox
+                         }
+
+newPairView :: PairBox -> Int -> IO PairView
+newPairView pb i = do
+  hbox <- hBoxNew False 0
+  label <- makeLabel (show i)
+  boxPackStart hbox label PackNatural 3
+  boxPackStart hbox (pbVbox pb) PackGrow 1
+  return $ PairView { pvPairBox = pb
+                    , pvMargin  = label
+                    , pvBox     = hbox
+                    }
 
 newEditorView :: Editor -> VBox -> Notebook -> ScrolledWindow
   -> Label -> HBox -> IO EditorView
@@ -37,8 +53,8 @@ getEditor view = readIORef $ evEditor view
 addLine :: EditorView -> String -> IO ()
 addLine view s = do
   ed <- getEditor view
-  l <- addNewLine ed s
-  addPairToBox (displayBox view) l
+  pb <- addNewLine ed s
+  addPairToBox (displayBox view) pb
 
 removeLine :: EditorView -> IO ()
 removeLine view = do
@@ -55,14 +71,21 @@ addFocusHandler view i = do
   onFocusIn e $ \dirtype -> setLine view i >> return False
   return ()
 
+-- helper function for refreshView
+addPairToViewBox :: VBox -> (PairBox, Int) -> IO ()
+addPairToViewBox box (pb, i) = do
+  pv <- newPairView pb i
+  addToBox box (pvBox pv)
+
 refreshView :: EditorView -> IO ()
 refreshView view = do
   ed <- getEditor view
   es <- getContent ed
   box <- return $ displayBox view
   containerForeach box (containerRemove box)
-  V.mapM_ (addPairToBox box) es
-  mapM_ (addFocusHandler view) [0 .. (V.length es - 1)]
+  let n = V.length es
+  mapM_ (addPairToViewBox box) (zip (V.toList es) [1 .. n])
+  mapM_ (addFocusHandler view) [0 .. (n - 1)]
   refreshStatus view
 
 refreshStatus :: EditorView -> IO ()

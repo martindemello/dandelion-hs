@@ -4,6 +4,7 @@ import Graphics.UI.Gtk
 import Data.IORef
 import qualified Data.Vector as V
 import Data.Vector (Vector, (!))
+import Control.Monad (liftM)
 
 import GuiUtils
 
@@ -96,3 +97,6 @@ setFilePath ed fname = writeIORef (edFilePath ed) (Just fname)
 
 clearFilePath :: Editor -> IO ()
 clearFilePath ed = writeIORef (edFilePath ed) Nothing
+
+getLength :: Editor -> IO Int
+getLength ed = V.length `liftM` (getContent ed)
