@@ -1,6 +1,16 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module GuiUtils where
 
 import Graphics.UI.Gtk
+
+-- packable objects
+class WidgetClass w => Packable a w where
+    boxOf :: a -> w
+
+instance WidgetClass w => Packable w w where
+    boxOf = id
 
 -- new textfield
 makeEntry :: String -> IO Entry
@@ -17,6 +27,7 @@ makeLabel s = do
   return label
 
 -- add widget to box with default params
+
 addToBox box widget = boxPackStart box widget PackNatural 0
 newBoxButton :: (BoxClass a) => a -> String -> IO Button
 newBoxButton box s = do

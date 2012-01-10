@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module EditorView where
 
 import Graphics.UI.Gtk
@@ -18,10 +20,16 @@ data EditorView = EditorView { evEditor    :: IORef Editor
                              , currentLine :: IORef Int
                              }
 
+instance Packable EditorView VBox where
+    boxOf = displayBox
+
 data PairView = PairView { pvPairBox :: PairBox
                          , pvMargin  :: Label
                          , pvBox     :: HBox
                          }
+
+instance Packable PairView HBox where
+    boxOf = pvBox
 
 newPairView :: PairBox -> Int -> IO PairView
 newPairView pb i = do
