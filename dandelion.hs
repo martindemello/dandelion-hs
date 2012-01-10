@@ -49,7 +49,7 @@ main = runGUI $ do
 
   set window [ containerChild := box ]
 
-  boxPackStart box ntbk PackGrow 5
+  boxPackS box ntbk PackGrow 5
   addToBox box sbar
 
   addLines ed 3

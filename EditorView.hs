@@ -21,7 +21,7 @@ data EditorView = EditorView { evEditor    :: IORef Editor
                              }
 
 instance Packable EditorView VBox where
-    boxOf = displayBox
+    widgetOf = displayBox
 
 data PairView = PairView { pvPairBox :: PairBox
                          , pvMargin  :: Label
@@ -29,14 +29,14 @@ data PairView = PairView { pvPairBox :: PairBox
                          }
 
 instance Packable PairView HBox where
-    boxOf = pvBox
+    widgetOf = pvBox
 
 newPairView :: PairBox -> Int -> IO PairView
 newPairView pb i = do
   hbox <- hBoxNew False 0
   label <- makeLabel (show i)
-  boxPackStart hbox label PackNatural 3
-  boxPackStart hbox (pbVbox pb) PackGrow 1
+  boxPackS hbox label PackNatural 3
+  boxPackS hbox pb PackGrow 1
   return $ PairView { pvPairBox = pb
                     , pvMargin  = label
                     , pvBox     = hbox
@@ -83,7 +83,7 @@ addFocusHandler view i = do
 addPairToViewBox :: VBox -> (PairBox, Int) -> IO ()
 addPairToViewBox box (pb, i) = do
   pv <- newPairView pb i
-  addToBox box (pvBox pv)
+  addToBox box pv
 
 refreshView :: EditorView -> IO ()
 refreshView view = do

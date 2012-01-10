@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Editor where
 
 import Graphics.UI.Gtk
@@ -18,6 +20,9 @@ data Editor = Editor { edPairs    :: IORef (Vector PairBox)
                      , edFilePath :: IORef (Maybe String)
                      }
 
+instance Packable PairBox VBox where
+    widgetOf = pbVbox
+
 newEditor :: IO Editor
 newEditor = do
   e <- newIORef (V.empty)
@@ -37,8 +42,8 @@ makePairBox (l, s) = do
   set orig [entryEditable := False, entryHasFrame := False, widgetCanFocus := False]
   widgetModifyBase orig StateNormal (Color 55000 60000 65535)
   entrySetHasFrame text True
-  boxPackStart box orig PackNatural 0
-  boxPackStart box text PackNatural 0
+  boxPackS box orig PackNatural 0
+  boxPackS box text PackNatural 0
   return $ PairBox { pbOrig = orig, pbText = text, pbVbox = box }
 
 origText :: PairBox -> IO String
@@ -53,7 +58,7 @@ pairOfPairBox pb = do
   b <- newText pb
   return $ (a, b)
 
-addPairToBox box v = addToBox box (pbVbox v)
+addPairToBox box v = addToBox box v
 
 -- editor functions
 addToEditor :: Editor -> PairBox -> IO Editor
