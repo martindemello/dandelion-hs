@@ -10,16 +10,7 @@ import Control.Monad (liftM)
 
 import GuiUtils
 import Packable
-
--- a PairBox contains a VBox containing original text and annotation
-data PairBox = PairBox { pbOrig :: Entry
-                       , pbText :: Entry
-                       , pbVbox :: VBox
-                       }
-
-data Editor = Editor { edPairs    :: IORef (Vector PairBox)
-                     , edFilePath :: IORef (Maybe String)
-                     }
+import Types
 
 instance Packable PairBox VBox where
     widgetOf = pbVbox

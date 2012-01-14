@@ -12,14 +12,7 @@ import Editor
 import FileIO
 import GuiUtils
 import Packable
-
-data EditorView = EditorView { evEditor    :: IORef Editor
-                             , displayBox  :: VBox
-                             , noteBook    :: Notebook
-                             , scrollPane  :: ScrolledWindow
-                             , status      :: Label
-                             , currentLine :: IORef Int
-                             }
+import Types
 
 instance Packable EditorView VBox where
     widgetOf = displayBox
@@ -43,14 +36,14 @@ newPairView pb i = do
                     , pvBox     = hbox
                     }
 
-newEditorView :: Editor -> VBox -> Notebook -> ScrolledWindow
+newEditorView :: Application -> Editor -> VBox -> ScrolledWindow
   -> Label -> IO EditorView
-newEditorView ed ebox ntbk swin status = do
+newEditorView app ed ebox swin status = do
   lnum  <- newIORef 0
   ie <- newIORef ed
   return $ EditorView { evEditor = ie
+                      , evApp = app
                       , displayBox = ebox
-                      , noteBook = ntbk
                       , scrollPane = swin
                       , status = status
                       , currentLine = lnum
@@ -154,7 +147,7 @@ setStatus view = do
 
 setNotebookTabLabel :: EditorView -> IO ()
 setNotebookTabLabel view = do
-  nb <- return $ toNotebook $ noteBook view
+  nb <- return $ toNotebook $ apNotebook $ evApp view
   sp <- return $ scrollPane view
   ed <- getEditor view
   f <- readIORef $ edFilePath ed

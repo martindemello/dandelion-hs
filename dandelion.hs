@@ -1,5 +1,6 @@
 import Application
 import GuiUtils
+import Types
 
 main :: IO ()
 main = runGUI $ do

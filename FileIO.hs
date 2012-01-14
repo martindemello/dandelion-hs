@@ -3,8 +3,9 @@ module FileIO (importFile, loadFile, saveFile, exportFile) where
 import qualified Data.Vector as V
 import Control.Monad ((>=>), (<=<), (>>), liftM)
 
-import Editor (Editor, PairBox, makePairBox, getPairs, setPairs, setFilePath, clearFilePath)
+import Editor (makePairBox, getPairs, setPairs, setFilePath, clearFilePath)
 import Datafile
+import Types
 
 -- File -> Editor
 

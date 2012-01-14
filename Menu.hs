@@ -7,6 +7,7 @@ import GuiUtils
 import Editor
 import FileIO
 import EditorView
+import Types
 
 -- debugging helper
 prAct :: ActionClass self => self -> IO (ConnectId self)

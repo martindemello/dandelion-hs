@@ -12,12 +12,7 @@ import FileIO
 import GuiUtils
 import Menu
 import Packable
-
-data Application = Application { apWindow      :: Window
-                               , apNotebook    :: Notebook
-                               , apStatus      :: Label
-                               , apCurrentView :: IORef EditorView
-                               }
+import Types
 
 -- scaffolding to test gui functionality during development
 addLines :: Editor -> Int -> IO Editor
@@ -26,8 +21,10 @@ addLines ed i = do
   return ed
 
 -- add editor tab
-addEditorTab :: Notebook -> Label -> IO EditorView
-addEditorTab ntbk status = do
+addEditorTab :: Application -> IO EditorView
+addEditorTab app = do
+  ntbk <- return $ apNotebook app
+  status <- return $ apStatus app
   ebox <- vBoxNew False 0
 
   scrwin <- scrolledWindowNew Nothing Nothing
@@ -38,7 +35,7 @@ addEditorTab ntbk status = do
 
   ed <- newEditor
   addLines ed 3
-  newEditorView ed ebox ntbk scrwin status
+  newEditorView app ed ebox scrwin status
 
 -- newWindow
 makeApplication :: IO Application
@@ -54,7 +51,14 @@ makeApplication = do
   status <- makeLabel ""
   addToBox sbar status
 
-  view <- addEditorTab ntbk status
+  curview <- newIORef Nothing
+  app <- return $ Application { apWindow = window
+                              , apNotebook = ntbk
+                              , apStatus = status
+                              , apCurrentView = curview
+                              }
+
+  view <- addEditorTab app
 
   ui <- setupMenu window windowbox view
 
@@ -62,13 +66,6 @@ makeApplication = do
 
   boxPackS windowbox ntbk PackGrow 5
   addToBox windowbox sbar
-  curview <- newIORef view
 
   refreshView view
-  return $ Application { apWindow = window
-                       , apNotebook = ntbk
-                       , apStatus = status
-                       , apCurrentView = curview
-                       }
-    
-
+  return $ app
