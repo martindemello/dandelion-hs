@@ -9,6 +9,7 @@ import Data.Vector (Vector, (!))
 import Control.Monad (liftM)
 
 import GuiUtils
+import Packable
 
 -- a PairBox contains a VBox containing original text and annotation
 data PairBox = PairBox { pbOrig :: Entry

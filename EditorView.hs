@@ -4,13 +4,14 @@ module EditorView where
 
 import Graphics.UI.Gtk
 import System.FilePath
+import Data.IORef
 import qualified Data.Vector as V
 
 import Datafile
-import GuiUtils
 import Editor
 import FileIO
-import Data.IORef
+import GuiUtils
+import Packable
 
 data EditorView = EditorView { evEditor    :: IORef Editor
                              , displayBox  :: VBox
@@ -43,8 +44,8 @@ newPairView pb i = do
                     }
 
 newEditorView :: Editor -> VBox -> Notebook -> ScrolledWindow
-  -> Label -> HBox -> IO EditorView
-newEditorView ed ebox ntbk swin status sbar = do
+  -> Label -> IO EditorView
+newEditorView ed ebox ntbk swin status = do
   lnum  <- newIORef 0
   ie <- newIORef ed
   return $ EditorView { evEditor = ie

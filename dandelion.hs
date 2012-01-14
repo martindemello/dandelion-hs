@@ -4,11 +4,26 @@ import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Data.Vector as V
 
 import Datafile
-import GuiUtils
 import Editor
-import FileIO
-import Menu
 import EditorView
+import FileIO
+import GuiUtils
+import Menu
+import Packable
+
+-- add editor tab
+addEditorTab :: Notebook -> Label -> Editor -> IO EditorView
+addEditorTab ntbk status ed = do
+  ebox <- vBoxNew False 0
+
+  scrwin <- scrolledWindowNew Nothing Nothing
+  scrolledWindowSetPolicy scrwin PolicyAutomatic PolicyAlways
+  scrolledWindowAddWithViewport scrwin ebox
+
+  notebookAppendPage ntbk scrwin "[None]"
+
+  newEditorView ed ebox ntbk scrwin status
+
 
 -- scaffolding to test gui functionality during development
 addLines :: Editor -> Int -> IO Editor
@@ -31,19 +46,16 @@ main = runGUI $ do
   set ntbk [notebookScrollable := True, notebookTabPos := PosTop]
 
   ed <- newEditor
-  ebox <- vBoxNew False 0
-
-  scrwin <- scrolledWindowNew Nothing Nothing
-  scrolledWindowSetPolicy scrwin PolicyAutomatic PolicyAlways
-  scrolledWindowAddWithViewport scrwin ebox
-
-  notebookAppendPage ntbk scrwin "[None]"
 
   sbar <- hBoxNew False 0
   status <- makeLabel ""
   addToBox sbar status
 
-  view <- newEditorView ed ebox ntbk scrwin status sbar
+  sbar <- hBoxNew False 0
+  status <- makeLabel ""
+  addToBox sbar status
+
+  view <- addEditorTab ntbk status ed
 
   ui <- setupMenu window box ed view
 
