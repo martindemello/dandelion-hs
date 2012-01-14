@@ -14,17 +14,6 @@ import GuiUtils
 import Packable
 import Types
 
-instance Packable EditorView VBox where
-    widgetOf = displayBox
-
-data PairView = PairView { pvPairBox :: PairBox
-                         , pvMargin  :: Label
-                         , pvBox     :: HBox
-                         }
-
-instance Packable PairView HBox where
-    widgetOf = pvBox
-
 newPairView :: PairBox -> Int -> IO PairView
 newPairView pb i = do
   hbox <- hBoxNew False 0

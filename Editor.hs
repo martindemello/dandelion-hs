@@ -12,9 +12,6 @@ import GuiUtils
 import Packable
 import Types
 
-instance Packable PairBox VBox where
-    widgetOf = pbVbox
-
 newEditor :: IO Editor
 newEditor = do
   e <- newIORef (V.empty)

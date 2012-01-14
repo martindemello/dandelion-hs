@@ -29,3 +29,9 @@ data PairBox = PairBox { pbOrig :: Entry
                        , pbVbox :: VBox
                        }
 
+data PairView = PairView { pvPairBox :: PairBox
+                         , pvMargin  :: Label
+                         , pvBox     :: HBox
+                         }
+
+type MenuFileOp = Window -> EditorView -> IO ()

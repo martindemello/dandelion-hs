@@ -1,6 +1,7 @@
 module Menu where
 
 import Graphics.UI.Gtk
+import Data.IORef
 
 import Datafile
 import GuiUtils
@@ -48,11 +49,18 @@ addMenubarActions agr = do
   hma <- addMenubarAction "HMA" "_Help"
   mapM_ (actionGroupAddAction agr) [fma, ema, hma]
 
-
 -- menu actions
 
-setupMenu :: Window -> VBox -> EditorView -> IO UIManager
-setupMenu window box view = do
+doWithCurrentView :: Application -> MenuFileOp -> IO ()
+doWithCurrentView app fn = do
+  evr <- readIORef $ apCurrentView app
+  window <- return $ apWindow app
+  case evr of
+       Nothing -> return ()
+       Just ev -> fn window ev
+
+setupMenu :: Application -> VBox -> IO UIManager
+setupMenu app box = do
   -- define menus
   impa <- actionNew "IMPA" "_Import"  (Just "Import file") (Just stockNew)
   opna <- actionNew "OPNA" "_Open"    (Just "Open file") (Just stockOpen)
@@ -67,13 +75,15 @@ setupMenu window box view = do
 
   hlpa <- actionNew "HLPA" "_Help"  (Just "Help") (Just stockHelp)
 
+  window <- return $ apWindow app
   -- file menu
+  let fDo = doWithCurrentView app
   onActionActivate exia (widgetDestroy window)
-  onActionActivate opna (runLoadFile window view)
-  onActionActivate sava (runSaveFile window view)
-  onActionActivate svaa (runSaveFileAs window view)
-  onActionActivate impa (runImportFile window view)
-  onActionActivate expa (runExportFile window view)
+  onActionActivate opna (fDo runLoadFile)
+  onActionActivate sava (fDo runSaveFile)
+  onActionActivate svaa (fDo runSaveFileAs)
+  onActionActivate impa (fDo runImportFile)
+  onActionActivate expa (fDo runExportFile)
 
   agr <- actionGroupNew "AGR"
   mapM_ (\ act -> actionGroupAddActionWithAccel agr act Nothing)

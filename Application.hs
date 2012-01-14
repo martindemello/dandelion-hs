@@ -60,7 +60,7 @@ makeApplication = do
 
   view <- addEditorTab app
 
-  ui <- setupMenu window windowbox view
+  ui <- setupMenu app windowbox
 
   set window [ containerChild := windowbox ]
 
@@ -68,4 +68,5 @@ makeApplication = do
   addToBox windowbox sbar
 
   refreshView view
+  writeIORef curview (Just view)
   return $ app
