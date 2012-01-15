@@ -4,9 +4,7 @@ import Graphics.UI.Gtk
 import Data.IORef
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Data.Vector as V
-import Data.List (find)
-import Control.Monad (liftM, liftM2, liftM3, filterM)
-import Data.Maybe (listToMaybe)
+import Control.Monad.TM
 
 import Datafile
 import Editor
@@ -66,5 +64,4 @@ getCurrentView app = do
   ntbk <- return $ apNotebook app
   tab <- notebookGetCurrentPage ntbk
   evs <- readIORef (apViews app)
-  current <- filterM (isCurrentView ntbk tab) evs
-  return $ listToMaybe current
+  findM (isCurrentView ntbk tab) evs
