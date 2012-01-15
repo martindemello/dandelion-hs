@@ -4,13 +4,15 @@ import Graphics.UI.Gtk
 import Data.IORef
 import qualified Graphics.UI.Gtk.Gdk.EventM as E
 import qualified Data.Vector as V
+import Data.List (find)
+import Control.Monad (liftM, liftM2, liftM3, filterM)
+import Data.Maybe (listToMaybe)
 
 import Datafile
 import Editor
 import EditorView
 import FileIO
 import GuiUtils
-import Menu
 import Packable
 import Types
 
@@ -38,35 +40,31 @@ addEditorTab app = do
   newEditorView app ed ebox scrwin status
 
 -- newWindow
-makeApplication :: IO Application
-makeApplication = do
-  window <- windowNew
-  set window [windowTitle := "Dandelion"]
-
-  windowbox <- vBoxNew False 0
-
-  ntbk <- notebookNew
-  set ntbk [notebookScrollable := True, notebookTabPos := PosTop]
-  sbar <- hBoxNew False 0
-  status <- makeLabel ""
-  addToBox sbar status
-
-  curview <- newIORef Nothing
+makeApplication :: Window -> Notebook -> Label -> IO Application
+makeApplication window ntbk status = do
+  views <- newIORef []
   app <- return $ Application { apWindow = window
                               , apNotebook = ntbk
                               , apStatus = status
-                              , apCurrentView = curview
+                              , apViews = views
                               }
 
-  view <- addEditorTab app
+  view1 <- addEditorTab app
+  view2 <- addEditorTab app
 
-  ui <- setupMenu app windowbox
-
-  set window [ containerChild := windowbox ]
-
-  boxPackS windowbox ntbk PackGrow 5
-  addToBox windowbox sbar
-
-  refreshView view
-  writeIORef curview (Just view)
+  refreshView view1
+  writeIORef views [view1, view2]
   return $ app
+
+isCurrentView :: Notebook -> Int -> EditorView -> IO Bool
+isCurrentView ntbk tab ev = do
+  n <- get ntbk $ notebookChildPosition (scrollPane ev)
+  return (n == tab)
+
+getCurrentView :: Application -> IO (Maybe EditorView)
+getCurrentView app = do
+  ntbk <- return $ apNotebook app
+  tab <- notebookGetCurrentPage ntbk
+  evs <- readIORef (apViews app)
+  current <- filterM (isCurrentView ntbk tab) evs
+  return $ listToMaybe current

@@ -7,7 +7,7 @@ import Data.Vector
 data Application = Application { apWindow      :: Window
                                , apNotebook    :: Notebook
                                , apStatus      :: Label
-                               , apCurrentView :: IORef (Maybe EditorView)
+                               , apViews       :: IORef [EditorView]
                                }
 
 

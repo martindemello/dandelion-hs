@@ -3,6 +3,7 @@ module Menu where
 import Graphics.UI.Gtk
 import Data.IORef
 
+import Application
 import Datafile
 import GuiUtils
 import Editor
@@ -53,7 +54,7 @@ addMenubarActions agr = do
 
 doWithCurrentView :: Application -> MenuFileOp -> IO ()
 doWithCurrentView app fn = do
-  evr <- readIORef $ apCurrentView app
+  evr <- getCurrentView app
   window <- return $ apWindow app
   case evr of
        Nothing -> return ()
